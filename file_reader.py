@@ -63,6 +63,34 @@ def filtered_coord(wavelength, flux):
         i += 1
     return new_wl, new_fx
 
+def filtered_coord_single(wavelength, flux, chunk_num):
+    """
+    Input: unfilered lists of wavelength and flux; type == 2D array
+    Output: new lists of wavelength and flux s.t. new_lst = [[old1], [old2]] if a gap exists between [old1] and
+        [old2]; type == 2D array: new_wavelength, new_flux
+
+    Precondition: lists of wavelength and flux have the same size
+    """
+    assert len(wavelength) == len(flux), 'Coordinates have the same size'
+
+    new_wl = []
+    new_fx = []
+    i = 1
+    indv_wl, indv_fx = [wavelength[0]], [flux[0]]
+    while i < len(wavelength):
+        if is_gap(indv_wl, wavelength[i]):
+            new_wl.append(indv_wl)
+            new_fx.append(indv_fx)
+            indv_wl, indv_fx = [wavelength[i]], [flux[i]]
+        else:
+            indv_wl.append(wavelength[i])
+            indv_fx.append(flux[i])
+        new_wl.append(indv_wl)
+        new_fx.append(indv_fx)
+        i += 1
+    print("Number of chunks: " + str(len(new_wl)))
+    return new_wl[chunk_num], new_fx[chunk_num]
+
 def is_gap(cur_lst, item):
     """ 
     Identify if a gap exists between the current list item and the next item based on the difference in mean.
@@ -83,19 +111,25 @@ def is_gap(cur_lst, item):
 
 new_wavelength, new_flux = filtered_coord(wavelength_lst, flux_lst)
 
+def read_file(year, month, HJD):
+    file_name = make_file_name(root_dir, year, month, HJD)
+    x, y = read_single_file(file_name)
+    def select_chunk(chunk_num):
+        return filtered_coord_single(x, y, chunk_num)
+    return select_chunk
+    
 
-# file_name = make_file_name(root_dir, 1994, 7, 49552.340)
-#
-#
-# x, y = read_single_file(file_name)
 
+"""
 fig = plt.figure()
 ax = fig.add_subplot(111)
 for w, f in zip(new_wavelength, new_flux):
     ax.clear()
     ax.plot(w, f)
     plt.pause(0.1)
-
+"""
+a = read_file(1994, 7, 49562.352)
+print(a(0))
 #print(new_wavelength)
 
 
