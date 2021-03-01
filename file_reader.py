@@ -2,17 +2,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 import glob
 
+# file_name = "./HD199178_spectra/J_A+A_625_A79_sp_HD199178_1994_07-49552.340.dat.csv"
 
-# read each csv to
-file_name = "./HD199178_spectra/J_A+A_625_A79_sp_HD199178_1994_07-49552.340.dat.csv"
+root_dir = "./HD199178_spectra/"
+all_files = glob.glob(root_dir + "/*.csv")
 
 def make_file_name(root_dir, year, month, HJD):
     baseline = "/J_A+A_625_A79_sp_HD199178_"
     file_name = baseline + str(year) + "_" + f"{month:02}" + "-" + "{0:.3f}".format(HJD)
     file_name = file_name + ".dat.csv"
     return root_dir + file_name
-
-
 
 def read_single_file(file_name):
     wavelength = []
@@ -23,15 +22,6 @@ def read_single_file(file_name):
             wavelength.append(float(data[0]))
             flux.append(float(data[1]))
     return np.array(wavelength), np.array(flux)
-
-
-root_dir = "./HD199178_spectra"
-all_files = glob.glob(root_dir + "/*.csv")
-wavelength_lst, flux_lst = [], []
-for file in all_files:
-    wavelength, flux = read_single_file(file)
-    wavelength_lst.append(wavelength)
-    flux_lst.append(flux)
 
 def filtered_coord(wavelength, flux):
     """
@@ -109,15 +99,36 @@ def is_gap(cur_lst, item):
         return True
     return False
 
-new_wavelength, new_flux = filtered_coord(wavelength_lst, flux_lst)
+def read_data(year, month):
+    """
+    Takes in the year and month of desired files, takes in an extra index CHUNK_NUM to select the chunk among
+    the dataset with gaps.
+    """
+    wavelength_lst, flux_lst = [], []
 
-def read_file(year, month, HJD):
-    file_name = make_file_name(root_dir, year, month, HJD)
-    x, y = read_single_file(file_name)
-    def select_chunk(chunk_num):
-        return filtered_coord_single(x, y, chunk_num)
+    for file in all_files:
+        if (str(year) + "_" + str(month)) in file:
+            wavelength, flux = read_single_file(file)
+            wavelength_lst.extend(wavelength)
+            flux_lst.extend(flux)
+
+    def select_chunk(chunk_num=0):
+        return filtered_coord_single(wavelength_lst, flux_lst, chunk_num)
+
     return select_chunk
-    
+
+def make_matrix(x, y):
+    """
+    Input: x, y coordinates of the vector(s)
+    Output: [[x1,y1],[x2,y2]]
+    """
+    mat = []
+    for i in x:
+        for j in y:
+            mat.append([i,j])
+    return np.array(mat)
+
+#new_wavelength, new_flux = filtered_coord(wavelength_lst, flux_lst)
 
 
 """
@@ -128,9 +139,8 @@ for w, f in zip(new_wavelength, new_flux):
     ax.plot(w, f)
     plt.pause(0.1)
 """
-a = read_file(1994, 7, 49562.352)
-print(a(0))
-#print(new_wavelength)
+w, l = read_data(1998, 10)(0)
+print(make_matrix(w, l))
 
 
 
