@@ -55,7 +55,7 @@ def filtered_coord(wavelength, flux):
         i += 1
     return new_wl, new_fx
 
-def filtered_coord_single(wavelength, flux, chunk_num):
+def filtered_coord_single(wavelength, flux, chunk_num=0):
     """
     Input: unfilered lists of wavelength and flux; type == 2D array
     Output: new lists of wavelength and flux s.t. new_lst = [[old1], [old2]] if a gap exists between [old1] and
@@ -67,19 +67,22 @@ def filtered_coord_single(wavelength, flux, chunk_num):
 
     new_wl = []
     new_fx = []
+    has_gap = False
     i = 1
     indv_wl, indv_fx = [wavelength[0]], [flux[0]]
     while i < len(wavelength):
-        if is_gap(indv_wl, wavelength[i]):
+        has_gap = is_gap(indv_wl, wavelength[i])
+        if has_gap:
             new_wl.append(indv_wl)
             new_fx.append(indv_fx)
             indv_wl, indv_fx = [wavelength[i]], [flux[i]]
         else:
             indv_wl.append(wavelength[i])
             indv_fx.append(flux[i])
+        i += 1
+    if not has_gap:
         new_wl.append(indv_wl)
         new_fx.append(indv_fx)
-        i += 1
     print("Number of chunks: " + str(len(new_wl)))
     return new_wl[chunk_num], new_fx[chunk_num]
 
@@ -118,8 +121,9 @@ def read_data(year, month):
             flux_lst.extend(flux)
 
     def select_chunk(chunk_num=0):
+        print(len(wavelength_lst))
         return filtered_coord_single(wavelength_lst, flux_lst, chunk_num)
-
+    print(len(wavelength_lst))
     return select_chunk
 
 def make_matrix(x, y):
@@ -175,19 +179,18 @@ def get_phases(year, month):
 
 #print(get_phases(1994, 11))
 
-
-#new_wavelength, new_flux = filtered_coord(wavelength_lst, flux_lst)
-
-
 """
+#new_wavelength, new_flux = filtered_coord(wavelength_lst, flux_lst)
+wa, l = read_data(1998, 10)(2)
+print(wa, l)
 fig = plt.figure()
 ax = fig.add_subplot(111)
-for w, f in zip(new_wavelength, new_flux):
+for w, f in zip(wa, l):
     ax.clear()
     ax.plot(w, f)
-    plt.pause(0.1)
+    #plt.pause(0.1)
+
 """
-#w, l = read_data(1998, 10)(0)
 #print(make_matrix(w, l))
 
 
