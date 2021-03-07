@@ -2,10 +2,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import glob
 
+
 # file_name = "./HD199178_spectra/J_A+A_625_A79_sp_HD199178_1994_07-49552.340.dat.csv"
 
 root_dir = "./HD199178_spectra/"
 all_files = glob.glob(root_dir + "/*.csv")
+period = 3.3175
 
 def make_file_name(root_dir, year, month, HJD):
     baseline = "/J_A+A_625_A79_sp_HD199178_"
@@ -106,6 +108,9 @@ def read_data(year, month):
     """
     wavelength_lst, flux_lst = [], []
 
+    if month < 10:
+        month = "0" + str(month)
+
     for file in all_files:
         if (str(year) + "_" + str(month)) in file:
             wavelength, flux = read_single_file(file)
@@ -128,6 +133,49 @@ def make_matrix(x, y):
             mat.append([i,j])
     return np.array(mat)
 
+def get_all_phases(T, initial=0):
+    """
+    Input: period, initial phase
+    Output: all the phases for the 100 files
+    """
+
+    phases = [initial]
+    i = 1
+    while i < len(all_files):
+        HJD_this = float(all_files[i][len(all_files[i])-17 : len(all_files[i])-8])
+        HJD_last = float(all_files[i-1][len(all_files[i-1])-17 : len(all_files[i-1])-8])
+        phase = (HJD_this - HJD_last) / T * 2 * np.pi + phases[i-1]
+        phase = phase % (2*np.pi)
+        phases.append(phase)
+        i += 1
+    return phases
+
+def get_phases(year, month):
+    """
+    Input: Specific year and month desired in int
+    Output: An array of phases for the given year and month
+    """
+    assert type(month) == int, 'month must be in int'
+    
+    if month < 10:
+        month = "0" + str(month)
+
+    index = []
+    i = 0
+    while i < len(all_files):
+        if (str(year) + "_" + str(month)) in all_files[i]:
+            index.append(i)
+        i += 1
+    all_phases = get_all_phases(period)
+    phases = []
+    for j in index:
+        phases.append(all_phases[j])
+
+    return np.array(phases)
+
+#print(get_phases(1994, 11))
+
+
 #new_wavelength, new_flux = filtered_coord(wavelength_lst, flux_lst)
 
 
@@ -139,9 +187,8 @@ for w, f in zip(new_wavelength, new_flux):
     ax.plot(w, f)
     plt.pause(0.1)
 """
-w, l = read_data(1998, 10)(0)
-print(make_matrix(w, l))
-
+#w, l = read_data(1998, 10)(0)
+#print(make_matrix(w, l))
 
 
 
