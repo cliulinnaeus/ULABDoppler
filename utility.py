@@ -10,10 +10,32 @@ from file_reader import *
 
 """
 
-
-def surface_map_to_vector(num):
-    #TODO:
-    return None
+def vector_to_map(I, radius, inclination_angle):
+    def get_2D_map(I, radius):
+        num = len(I)
+        num_lat = np.sqrt(np.pi * num) / 2
+        b = 2 * radius * np.sqrt(np.pi / num)
+        surf_map = []
+        lat = 1
+        while lat <= num_lat:
+            theta = 180 / (np.pi * lat * b)
+            num_long = np.sqrt(num * np.pi) * np.sin(theta)
+            long = 0
+            while long < num_long:
+                surf_ring = []
+                surf_ring.append(I[long])
+                long += 1
+            surf_map.append(surf_ring)
+            lat += 1
+        return surf_map
+    
+    def plot(surf_map, incl_angle):
+        """
+        plot the sphere given the 2D array and inclination angle
+        """
+        return None
+    
+    return plot(get_2D_map, inclination_angle)
 
 
 def forward(R, I):
