@@ -177,7 +177,7 @@ def get_phases(year, month):
 
     return np.array(phases)
 
-#print(get_phases(1994, 11))
+print(get_phases(1994, 11))
 
 """
 #new_wavelength, new_flux = filtered_coord(wavelength_lst, flux_lst)
