@@ -13,6 +13,8 @@ from file_reader import *
 
 def surface_map_to_vector(num):
     #TODO:
+    
+    
     return None
 
 
