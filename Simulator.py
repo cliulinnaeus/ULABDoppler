@@ -10,7 +10,7 @@ class Star:
     def __init__(self, inclination_angle, temp, radius, v_e, num_of_patches):
         spots_lat = np.array([0, np.pi/2])
         spots_long = np.array([np.pi, np.pi/2])
-        spots_radius = np.array([10, 10])
+        spots_radius = np.array([2, 10])
         spots_temp = np.array([3000, 1000])
 
 
@@ -22,9 +22,10 @@ class Star:
         self.num_latitudes, self.zones = self.get_lats_and_zones(num_of_patches)
         self.I = self.make_image_vector(num_of_patches, spots_lat, spots_long, spots_radius, spots_temp)
 
-    #TODO: plot spots radius
+    #TODO: plot spots radius --> None
     #TODO: fix small number of patches problem
     #TODO: forward problem solver (aka define the R matrix)
+
     def add_sunspots(self, I, spots_lat, spots_long, spots_radius, spots_temp):
         num_latitudes = int(self.num_latitudes)
         zones = self.zones
@@ -41,15 +42,64 @@ class Star:
         for x in range(len(spots_lat)):
             init_latitude = spots_lat[x]
             init_longitude = spots_long[x]
+            init_radius = spots_radius[x]
 
             i = math.floor((np.pi/2 - init_latitude) / delta_angle)
 
             delta_phi = 2*np.pi / zones[i]
 
             j = math.floor(init_longitude / delta_phi)
+            spot_center = int(np.sum(zones[0:i])) + j
 
-            index = int(np.sum(self.zones[0:i])) + j
-            I[index] = spots_temp[x]
+
+            def map_rad(self, I, radius, center_index):
+                """
+                Input: image vector I, index of the spot center in I
+                Output: an array of index of the whole spots with respect to the radius
+                """
+
+                index = [center_index]
+
+                bins = []
+                start_idx = 0
+                for z in self.zones:
+                    z = int(z)
+                    bins.append(copy.deepcopy(I[start_idx: start_idx + z]))
+                    start_idx = z + start_idx
+                zones = self.zones
+                width = int(max(zones))
+                height = int(num_latitudes)
+                temp_map = np.zeros((height, width))
+                for idx, bin in enumerate(bins):
+                    start_col = (width - len(bin)) // 2
+                    temp_map[idx][start_col : start_col + len(bin)] = bin
+                
+                counter = 0
+                x0, y0 = 0, 0
+                for h in range(height):
+                    for w in range(width):
+                        if temp_map[h][w] != 0:
+                            temp_map[h][w] = counter
+                            if counter == center_index:
+                                x0, y0 = w, h
+                            counter += 1
+                        else:
+                            temp_map[h][w] = -1
+
+                distance = lambda x1, y1: float('inf') if temp_map[y1][x1] == -1 else ((x1-x0)**2 + (y1-y0)**2)
+
+                for y1 in range(height):
+                    for x1 in range(width):
+                        if distance(x1, y1) <= (radius**2):
+                            index.append(int(temp_map[y1][x1]))
+
+                return np.array(index)
+
+            index = map_rad(self, I, init_radius, spot_center)
+            
+            for idx in index:
+                I[idx] = spots_temp[x]
+           
         return I
 
     def get_lats_and_zones(self, n):
@@ -72,8 +122,6 @@ class Star:
 
             zones[i-1] = int(math.floor(num_zones))
 
-        self.num_latitudes = num_latitudes
-        self.zones = zones
 
         return num_latitudes, zones
 
@@ -88,7 +136,6 @@ class Star:
         area_per_patch = total_area/n
 
         return area_per_patch
-
 
     def make_image_vector(self, n, spots_lat, spots_long, spots_radius, spots_temp):
         num_latitudes = self.num_latitudes
