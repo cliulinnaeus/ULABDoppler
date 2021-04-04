@@ -10,11 +10,47 @@ class Star:
         self.temp = temp
         self.radius = radius
         self.v_e = v_e
-        self.I = 0
+        self.I = None
+        self.num_latitudes = 0
+        self.zones = None
 
-    def add_sunspots(self, I, spots_lat, spots_long, spots_radius, spots_temp):
+    def add_sunspots(self, spots_lat, spots_long, spots_radius, spots_temp):
+        num_latitudes = self.num_latitudes
+        zones = self.zones
+
+        angles = np.zeros(num_latitudes)
+        total_polar_angle = np.pi - (np.pi/2 - self.inclination_angle)
+        delta_angle = total_polar_angle / num_latitudes 
+
+        #define the latitudes we have in terms of angles
+        for i in range(1, len(num_latitudes)+1):
+            polar_angle = delta_angle*i
+            angles[i] = np.pi/2 - polar_angle
+            
+
+
+        for i in range(len(spots_lat)):
+            init_latitude = spots_lat[i]
+            init_longitude = spots_long[i]
+
+            final_latitude = 0
+            final_longitude = 0
+
+            for j in range(len(angles)):
+                if angles[i] > init_latitude:
+
+
+            
+
+
+
+            
         
+
+
         
+
+
  
         return None
 
@@ -37,6 +73,9 @@ class Star:
             num_zones = (2 * np.pi * self.radius * np.sin(polar_angle)) / length_zone
 
             zones[i-1] = math.floor(num_zones)
+
+        self.num_latitudes = num_latitudes
+        self.zones = zones
         
         return num_latitudes, zones          
 
@@ -52,24 +91,13 @@ class Star:
         
         return area_per_patch
 
-    def add_background(I, temp):
-        sigma = 5.67e-8
-        flux = sigma * temp**4
-        
-        for i in range(len(I)):
-            I[i] = temp
 
-        return I
-
-
-
-    def make_image_vector(self, n, spots_lat, spots_long, spots_radius, spots_temp):
+     def make_image_vector(self, n, spots_lat, spots_long, spots_radius, spots_temp):
         num_latitudes, zones = get_lats_and_zones(self,n)
         num_zones = np.sum(zones)
-        I = np.full( num_zones , self.temp) 
-        #I = self.add_background(I, self.temp)
-        I = self.add_sunspots(I, spots_lat, spots_long, spots_radius, spots_temp)
-        self.I = I
+        self.I = np.full( num_zones , self.temp) 
+        self.add_sunspots(spots_lat, spots_long, spots_radius, spots_temp)
+        
 
 
 
