@@ -1,6 +1,7 @@
 import numpy as np
 import scipy as sp
 import math
+from math import radians, degrees, sin, cos, asin, acos, sqrt
 import copy
 import matplotlib.pyplot as plt
 
@@ -8,10 +9,10 @@ import matplotlib.pyplot as plt
 class Star:
 
     def __init__(self, inclination_angle, temp, radius, v_e, num_of_patches):
-        spots_lat = np.array([0, np.pi/2])
-        spots_long = np.array([np.pi, np.pi/2])
-        spots_radius = np.array([2, 10])
-        spots_temp = np.array([3000, 1000])
+        spots_lat = np.array([0, 0, np.pi/4])
+        spots_long = np.array([np.pi, 0, np.pi/2])
+        spots_radius = np.array([2e6, 2e6, 2e6])
+        spots_temp = np.array([3000, 1000, 2333])
 
 
 
@@ -22,7 +23,7 @@ class Star:
         self.num_latitudes, self.zones = self.get_lats_and_zones(num_of_patches)
         self.I = self.make_image_vector(num_of_patches, spots_lat, spots_long, spots_radius, spots_temp)
 
-    #TODO: plot spots radius --> None
+    #TODO: plot spots radius --> Done
     #TODO: fix small number of patches problem
     #TODO: forward problem solver (aka define the R matrix)
 
@@ -86,13 +87,29 @@ class Star:
                         else:
                             temp_map[h][w] = -1
 
-                distance = lambda x1, y1: float('inf') if temp_map[y1][x1] == -1 else ((x1-x0)**2 + (y1-y0)**2)
+
+                def great_circle(x1, y1, sphere_radius=self.radius):
+                    """
+                    Calculate spherical distance of two points given their lon, lat and raduis of the sphere
+                    """
+                    if temp_map[y1][x1] == -1:
+                        return float('inf')
+                    
+                    # converts xi, yi back to lon and lat using equations:
+                        # i = math.floor((np.pi/2 - init_latitude) / delta_angle)
+                        # j = math.floor(init_longitude / delta_phi)
+                    lat1, lon1 = np.pi/2 - y1 * delta_angle, x1 * delta_phi
+
+                    return sphere_radius * (acos(sin(lat1) * sin(lat0) + cos(lat1) * cos(lat0) * cos(lon1 - lon0)))
+
+                lat0, lon0 = np.pi/2 - y0 * delta_angle, x0 * delta_phi
 
                 for y1 in range(height):
                     for x1 in range(width):
-                        if distance(x1, y1) <= (radius**2):
+                        # print(great_circle(x1, y1))
+                        if great_circle(x1, y1) <= radius:
                             index.append(int(temp_map[y1][x1]))
-
+                # print(index)
                 return np.array(index)
 
             index = map_rad(self, I, init_radius, spot_center)
