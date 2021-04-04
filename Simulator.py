@@ -1,6 +1,7 @@
 import numpy as np
 import scipy as sp
 import math
+import copy
 
 class Star:
 
@@ -14,8 +15,17 @@ class Star:
         self.num_latitudes = 0
         self.zones = None
 
+    def _sort_into_bins(self):
+        arr = []
+        start_idx = 0
+        for z in self.zones:
+            arr.append(copy.deepcopy(self.I[start_idx: start_idx + z]))
+            start_idx = z
+        return arr
+
+
     def add_sunspots(self, spots_lat, spots_long, spots_radius, spots_temp):
-        num_latitudes = self.num_latitudes
+        num_latitudes = int(self.num_latitudes)
         zones = self.zones
 
         angles = np.zeros(num_latitudes)
@@ -23,21 +33,30 @@ class Star:
         delta_angle = total_polar_angle / num_latitudes 
 
         #define the latitudes we have in terms of angles
-        for i in range(1, len(num_latitudes)+1):
+        for i in range(1, num_latitudes+1):
             polar_angle = delta_angle*i
-            angles[i] = np.pi/2 - polar_angle
+            angles[i-1] = np.pi/2 - polar_angle
+            
+        for x in range(len(spots_lat)):
+            init_latitude = spots_lat[x]
+            init_longitude = spots_long[x]
+
+            i = math.floor((np.pi/2 - init_latitude) / delta_angle)
+           
+            delta_phi = 2*np.pi / zones[i]
+
+            j = math.floor((init_longitude) / delta_phi)
+
+            index = int(np.sum(self.zones[0:i])) + j
+
+            self.I[index] = spots_temp[x]
+
+
+
             
 
 
-        for i in range(len(spots_lat)):
-            init_latitude = spots_lat[i]
-            init_longitude = spots_long[i]
 
-            final_latitude = 0
-            final_longitude = 0
-
-            for j in range(len(angles)):
-                if angles[i] > init_latitude:
 
 
             
@@ -92,8 +111,8 @@ class Star:
         return area_per_patch
 
 
-     def make_image_vector(self, n, spots_lat, spots_long, spots_radius, spots_temp):
-        num_latitudes, zones = get_lats_and_zones(self,n)
+    def make_image_vector(self, n, spots_lat, spots_long, spots_radius, spots_temp):
+        num_latitudes, zones = self.get_lats_and_zones(n)
         num_zones = np.sum(zones)
         self.I = np.full( num_zones , self.temp) 
         self.add_sunspots(spots_lat, spots_long, spots_radius, spots_temp)
@@ -101,10 +120,8 @@ class Star:
 
 
 
-s = Star(0,2,3,4)
+s = Star(np.pi/2,5000,3,4)
 
-print(s.get_lats_and_zones(2000))
+s.make_image_vector(2000, np.array([0]), np.array([0]),1,np.array([2000]))
 
-a, b = s.get_lats_and_zones(2000)
-
-print(np.sum(b))
+print(s.I) 
