@@ -7,12 +7,11 @@ import matplotlib.pyplot as plt
 
 class Star:
 
-
     def __init__(self, inclination_angle, temp, radius, v_e, num_of_patches):
-        spots_lat = np.array([np.pi/4])
-        spots_long = np.array([np.pi])
-        spots_radius = np.array([10])
-        spots_temp = np.array([3000])
+        spots_lat = np.array([0, np.pi/2])
+        spots_long = np.array([np.pi, np.pi/2])
+        spots_radius = np.array([10, 10])
+        spots_temp = np.array([3000, 1000])
 
 
 
@@ -45,10 +44,9 @@ class Star:
 
             delta_phi = 2*np.pi / zones[i]
 
-            j = math.floor((init_longitude) / delta_phi)
+            j = math.floor(init_longitude / delta_phi)
 
             index = int(np.sum(self.zones[0:i])) + j
-
             I[index] = spots_temp[x]
         return I
 
@@ -103,11 +101,12 @@ class Star:
         for z in self.zones:
             z = int(z)
             arr.append(copy.deepcopy(self.I[start_idx: start_idx + z]))
-            start_idx = z
+            start_idx = z + start_idx
         return arr
 
     def plot_on_sphere(self):
         I = self.I
+        counter = 0
         n = len(I)
         inclination_angle = self.inclination_angle
         num_latitudes = self.num_latitudes
@@ -119,14 +118,14 @@ class Star:
         for idx, bin in enumerate(bins):
             start_col = (width - len(bin)) // 2
             map[idx][start_col : start_col + len(bin)] = bin
-            # map[idx][0 : len(bin)] = bin
         plt.imshow(map, cmap='hot')
         plt.show()
 
 
 
-s = Star(np.pi/2, 5000, 3e6, 4, 1000)
+s = Star(np.pi/2, 5000, 3e6, 4, 10000)
 # s.make_image_vector(2000, np.array([0]), np.array([0]),1,np.array([2000]))
+
 
 s.plot_on_sphere()
 
