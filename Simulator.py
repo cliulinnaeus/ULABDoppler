@@ -22,7 +22,9 @@ class Star:
         self.num_latitudes, self.zones = self.get_lats_and_zones(num_of_patches)
         self.I = self.make_image_vector(num_of_patches, spots_lat, spots_long, spots_radius, spots_temp)
 
-
+    #TODO: plot spots radius
+    #TODO: fix small number of patches problem
+    #TODO: forward problem solver (aka define the R matrix)
     def add_sunspots(self, I, spots_lat, spots_long, spots_radius, spots_temp):
         num_latitudes = int(self.num_latitudes)
         zones = self.zones
