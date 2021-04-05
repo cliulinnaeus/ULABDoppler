@@ -9,10 +9,10 @@ import matplotlib.pyplot as plt
 class Star:
 
     def __init__(self, inclination_angle, temp, radius, v_e, num_of_patches):
-        spots_lat = np.array([0, 0, np.pi/4])
-        spots_long = np.array([np.pi, 0, np.pi/2])
-        spots_radius = np.array([2e6, 2e6, 2e6])
-        spots_temp = np.array([3000, 1000, 2333])
+        spots_lat = np.array([0, 0, 0, 0, 0, 0, np.pi/4, np.pi/2, np.pi, 3*np.pi/2, 7*np.pi/4])
+        spots_long = np.array([0, np.pi/4, np.pi/2, np.pi, 3*np.pi/2, 7*np.pi/4, 0, 0, 0, 0, 0])
+        spots_radius = np.array([1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6])
+        spots_temp = np.array([500, 1000, 1500, 2000, 2500, 3000, 500, 1000, 1500, 2000, 2500])
 
 
 
@@ -45,77 +45,56 @@ class Star:
             init_longitude = spots_long[x]
             init_radius = spots_radius[x]
 
-            i = math.floor((np.pi/2 - init_latitude) / delta_angle)
-
-            delta_phi = 2*np.pi / zones[i]
-
-            j = math.floor(init_longitude / delta_phi)
-            spot_center = int(np.sum(zones[0:i])) + j
-
-
-            def map_rad(self, I, radius, center_index):
+            def map_rad(self, I, spot_radius, zones):
                 """
-                Input: image vector I, index of the spot center in I
-                Output: an array of index of the whole spots with respect to the radius
+                Input: image vector I, zones, radius of the spots
+                Output: new image space I
                 """
+                layered_I = []
+                count = 0
+                h = 0
+                while h < len(zones):
+                    layered_I.append(I[count:int(zones[h])+count])
+                    count += int(zones[h])
+                    h += 1
 
-                index = [center_index]
-
-                bins = []
-                start_idx = 0
-                for z in self.zones:
-                    z = int(z)
-                    bins.append(copy.deepcopy(I[start_idx: start_idx + z]))
-                    start_idx = z + start_idx
-                zones = self.zones
-                width = int(max(zones))
-                height = int(num_latitudes)
-                temp_map = np.zeros((height, width))
-                for idx, bin in enumerate(bins):
-                    start_col = (width - len(bin)) // 2
-                    temp_map[idx][start_col : start_col + len(bin)] = bin
-                
-                counter = 0
-                x0, y0 = 0, 0
-                for h in range(height):
-                    for w in range(width):
-                        if temp_map[h][w] != 0:
-                            temp_map[h][w] = counter
-                            if counter == center_index:
-                                x0, y0 = w, h
-                            counter += 1
-                        else:
-                            temp_map[h][w] = -1
-
-
-                def great_circle(x1, y1, sphere_radius=self.radius):
+                def get_distance(x1, y1, sphere_radius=self.radius):
                     """
                     Calculate spherical distance of two points given their lon, lat and raduis of the sphere
                     """
-                    if temp_map[y1][x1] == -1:
-                        return float('inf')
-                    
-                    # converts xi, yi back to lon and lat using equations:
+
+                    """
+                    converts xi, yi back to lon and lat using equations:
                         # i = math.floor((np.pi/2 - init_latitude) / delta_angle)
+                        # delta_phi = 2*np.pi / zones[i]
                         # j = math.floor(init_longitude / delta_phi)
-                    lat1, lon1 = np.pi/2 - y1 * delta_angle, x1 * delta_phi
+                    """
+                    delta_phi_new = 2*np.pi / zones[y1]
+                    lat1, lon1 = np.pi/2 - y1 * delta_angle, x1 * delta_phi_new
+                    
+                    dlon = lon1 - init_longitude
+                    dlat = lat1 - init_latitude
+                    a = sin(dlat / 2) ** 2 + cos(lat1) * cos(init_latitude) * sin(dlon / 2) ** 2
+                    return 2 * sphere_radius * asin(sqrt(a))
+                
+                #print(layered_I)
+                h = 0
+                while h < len(layered_I):
+                    w = 0
+                    while w < len(layered_I[h]):
+                        if get_distance(w, h) <= spot_radius:
+                            layered_I[h][w] = spots_temp[x]
+                        #print(h,w)
+                        w += 1
+                    h += 1
 
-                    return sphere_radius * (acos(sin(lat1) * sin(lat0) + cos(lat1) * cos(lat0) * cos(lon1 - lon0)))
+                new_I = []
+                for i in layered_I:
+                    new_I.extend(i)
 
-                lat0, lon0 = np.pi/2 - y0 * delta_angle, x0 * delta_phi
+                return np.array(new_I)
 
-                for y1 in range(height):
-                    for x1 in range(width):
-                        # print(great_circle(x1, y1))
-                        if great_circle(x1, y1) <= radius:
-                            index.append(int(temp_map[y1][x1]))
-                # print(index)
-                return np.array(index)
-
-            index = map_rad(self, I, init_radius, spot_center)
-            
-            for idx in index:
-                I[idx] = spots_temp[x]
+            I = map_rad(self, I, init_radius, zones)
            
         return I
 
@@ -189,7 +168,7 @@ class Star:
 
 
 
-s = Star(np.pi/2, 5000, 3e6, 4, 10000)
+s = Star(np.pi/4, 5000, 3e6, 4, 10000)
 # s.make_image_vector(2000, np.array([0]), np.array([0]),1,np.array([2000]))
 
 
