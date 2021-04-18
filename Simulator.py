@@ -20,8 +20,14 @@ class Star:
         self.temp = temp
         self.radius = radius
         self.v_e = v_e
-        self.num_latitudes, self.zones = self.get_lats_and_zones(num_of_patches)
+        self.spots_lat = spots_lat
+        self.spots_long = spots_long
+        self.spots_radius = spots_radius
+        self.spots_temp = spots_temp
+        # dtheta is the angle between nearby two longitudes
+        self.num_latitudes, self.zones, self.dtheta = self.get_lats_and_zones(num_of_patches)
         self.I = self.make_image_vector(num_of_patches, spots_lat, spots_long, spots_radius, spots_temp)
+        self.phase = 0
 
     #TODO: plot spots radius --> Done
     #TODO: fix small number of patches problem
@@ -118,14 +124,24 @@ class Star:
             num_zones = (2 * np.pi * self.radius * np.sin(polar_angle)) / length_zone
 
             zones[i-1] = int(math.floor(num_zones))
-
-
-        return num_latitudes, zones
+        # returns number of latitudes, an array of number of longitudes per lattitude,
+        # and delta longitude
+        return num_latitudes, zones, length_zone / self.radius
 
 
     def get_stellar_disk(self, phase):
-
         return None
+
+    # rotate to phase
+    def rotate(self, delta_phase):
+        self.spots_long = delta_phase + self.spots_long
+        for idx, s in enumerate(self.spots_long):
+            if s >= np.pi * 2:
+                self.spots_long[idx] = s - np.pi * 2
+        self.I = self.make_image_vector(1, self.spots_lat, self.spots_long, self.spots_radius, self.spots_temp)
+
+
+
 
     def calc_zone_area(self, radius, inclination_angle, n):
 
@@ -150,6 +166,12 @@ class Star:
             start_idx = z + start_idx
         return arr
 
+    def _bins_to_I(self, bins):
+        I = []
+        for bin in bins:
+            I.extend(bin)
+        return np.array(I)
+
     def plot_on_sphere(self):
         I = self.I
         counter = 0
@@ -165,14 +187,22 @@ class Star:
             start_col = (width - len(bin)) // 2
             map[idx][start_col : start_col + len(bin)] = bin
         plt.imshow(map, cmap='hot')
-        plt.show()
+        plt.pause(0.1)
 
 
 
-s = Star(np.pi/4, 5000, 3e6, 4, 10000)
+s = Star(np.pi/2, 5000, 3e6, 4, 10000)
 # s.make_image_vector(2000, np.array([0]), np.array([0]),1,np.array([2000]))
 
 
-s.plot_on_sphere()
+
+for i in range(15):
+    dtheta = 360 / 50
+    s.plot_on_sphere()
+    s.rotate(dtheta * np.pi / 180)
+
+
+# s.rotate(90* np.pi / 180)
+# s.plot_on_sphere()
 
 # print(s.I)
