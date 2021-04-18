@@ -25,6 +25,7 @@ class Star:
 
     #TODO: plot spots radius --> Done
     #TODO: fix small number of patches problem
+    #TODO: write star map for different rotational phases
     #TODO: forward problem solver (aka define the R matrix)
 
     def add_sunspots(self, I, spots_lat, spots_long, spots_radius, spots_temp):
