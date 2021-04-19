@@ -129,8 +129,27 @@ class Star:
         return num_latitudes, zones, length_zone / self.radius
 
 
-    def get_stellar_disk(self, phase):
-        return None
+    def get_stellar_disk(self):
+        polar_angle = np.pi/2 - self.inclination_angle
+        bins = self._sort_into_bins()
+        R = self.radius
+
+        for idx, bin in enumerate(bins):
+            
+            theta = self.dtheta * (idx + 1)
+            h = R*np.cos(theta) 
+            delta_l = h*np.tan(polar_angle)
+
+            if delta_l <= R*np.sin(theta):
+                
+                phi = 2*np.arccos((np.tan(polar_angle))/np.tan(theta))
+                fraction_off = round(phi/(2*np.pi) * self.zones[idx])
+
+                bin[0:fraction_off//2 + 1] = 0
+
+                bin[len(bin)-fraction_off//2:] = 0
+
+        self.stellar_disk_vector = self._bins_to_I(bins)
 
     # rotate to phase
     def rotate(self, delta_phase):
@@ -172,8 +191,8 @@ class Star:
             I.extend(bin)
         return np.array(I)
 
-    def plot_on_sphere(self):
-        I = self.I
+    def plot_on_sphere(self, lst):
+        I = lst
         counter = 0
         n = len(I)
         inclination_angle = self.inclination_angle
@@ -187,7 +206,7 @@ class Star:
             start_col = (width - len(bin)) // 2
             map[idx][start_col : start_col + len(bin)] = bin
         plt.imshow(map, cmap='hot')
-        plt.pause(0.1)
+        plt.show()
 
 
 
@@ -196,13 +215,18 @@ s = Star(np.pi/2, 5000, 3e6, 4, 10000)
 
 
 
-for i in range(15):
+'''for i in range(15):
     dtheta = 360 / 50
     s.plot_on_sphere()
-    s.rotate(dtheta * np.pi / 180)
+    s.rotate(dtheta * np.pi / 180)'''
 
 
 # s.rotate(90* np.pi / 180)
 # s.plot_on_sphere()
 
 # print(s.I)
+
+s.get_stellar_disk() 
+
+s.plot_on_sphere(s.stellar_disk_vector)
+
