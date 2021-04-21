@@ -131,24 +131,17 @@ class Star:
 
     def get_stellar_disk(self):
         polar_angle = np.pi/2 - self.inclination_angle
-        bins = self._sort_into_bins()
+        bins = self._sort_into_bins(self.I)
         R = self.radius
-
         for idx, bin in enumerate(bins):
-            
             theta = self.dtheta * (idx + 1)
             h = R*np.cos(theta) 
             delta_l = h*np.tan(polar_angle)
-
             if delta_l <= R*np.sin(theta):
-                
                 phi = 2*np.arccos((np.tan(polar_angle))/np.tan(theta))
                 fraction_off = round(phi/(2*np.pi) * self.zones[idx])
-
-                bin[0:fraction_off//2 + 1] = 0
-
-                bin[len(bin)-fraction_off//2:] = 0
-
+                bin[0:int(fraction_off//2 + 1)] = 0
+                bin[len(bin)-int(fraction_off//2):] = 0
         self.stellar_disk_vector = self._bins_to_I(bins)
 
     # rotate to phase
@@ -176,12 +169,12 @@ class Star:
         I = self.add_sunspots(I, spots_lat, spots_long, spots_radius, spots_temp)
         return I
 
-    def _sort_into_bins(self):
+    def _sort_into_bins(self, I):
         arr = []
         start_idx = 0
         for z in self.zones:
             z = int(z)
-            arr.append(copy.deepcopy(self.I[start_idx: start_idx + z]))
+            arr.append(copy.deepcopy(I[start_idx: start_idx + z]))
             start_idx = z + start_idx
         return arr
 
@@ -193,15 +186,12 @@ class Star:
 
     def plot_on_sphere(self, lst):
         I = lst
-        counter = 0
-        n = len(I)
-        inclination_angle = self.inclination_angle
         num_latitudes = self.num_latitudes
         zones = self.zones
         width = int(max(zones))
         height = int(num_latitudes)
         map = np.zeros((height, width))
-        bins = self._sort_into_bins()
+        bins = self._sort_into_bins(lst)
         for idx, bin in enumerate(bins):
             start_col = (width - len(bin)) // 2
             map[idx][start_col : start_col + len(bin)] = bin
@@ -227,6 +217,8 @@ s = Star(np.pi/2, 5000, 3e6, 4, 10000)
 # print(s.I)
 
 s.get_stellar_disk() 
-
+# print(s.stellar_disk_vector == s.I)
+print(s.stellar_disk_vector[0])
+print(s.I[0])
 s.plot_on_sphere(s.stellar_disk_vector)
-
+# s.plot_on_sphere(s.I - s.I)
