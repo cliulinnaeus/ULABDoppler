@@ -144,6 +144,9 @@ class Star:
                 bin[0:int(fraction_off//2 + 1)] = 0
                 bin[len(bin)-int(fraction_off//2):] = 0
         self.stellar_disk_vector = self._bins_to_I(bins)
+        stellar_disk = self.stellar_disk_vector
+
+        return stellar_disk
 
     # rotate to phase
     def rotate(self, delta_phase):
@@ -219,26 +222,26 @@ class Star:
 
 
 
-
-s = Star(np.pi/2, 5000, 3e6, 4, 10000)
-# s.make_image_vector(2000, np.array([0]), np.array([0]),1,np.array([2000]))
-
-
-
-'''for i in range(15):
-    dtheta = 360 / 50
-    s.plot_on_sphere()
-    s.rotate(dtheta * np.pi / 180)'''
+if __name__ == '__main__':
+    s = Star(np.pi/2, 5000, 3e6, 4, 10000)
+    # s.make_image_vector(2000, np.array([0]), np.array([0]),1,np.array([2000]))
 
 
-# s.rotate(90* np.pi / 180)
-# s.plot_on_sphere()
 
-# print(s.I)
+    '''for i in range(15):
+        dtheta = 360 / 50
+        s.plot_on_sphere()
+        s.rotate(dtheta * np.pi / 180)'''
 
-s.get_stellar_disk() 
-# print(s.stellar_disk_vector == s.I)
-print(s.stellar_disk_vector[0])
-print(s.I[0])
-s.plot_on_sphere(s.I)
-# s.plot_on_sphere(s.I - s.I)
+
+    # s.rotate(90* np.pi / 180)
+    # s.plot_on_sphere()
+
+    # print(s.I)
+
+    s.get_stellar_disk() 
+    # print(s.stellar_disk_vector == s.I)
+    print(s.stellar_disk_vector[0])
+    print(s.I[0])
+    s.plot_on_sphere(s.I)
+    # s.plot_on_sphere(s.I - s.I)

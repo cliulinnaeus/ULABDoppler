@@ -56,9 +56,8 @@ def doppler_shift(v_rot):
 
 print(black_body_matrix([1]))
 
-def get_R(star, num_wavelengths):
+def get_R(star, num_wavelengths, max_wavelength = 200e-8):
     
-    max_wavelength = 5000e-9
     delta_wavelength = max_wavelength / num_wavelengths #meters
 
     star.get_stellar_disk()
@@ -68,7 +67,7 @@ def get_R(star, num_wavelengths):
     inclination_angle = star.inclination_angle
     zones = star.zones 
     
-    wavelength_lst = np.linspace(0, max_wavelength, num_wavelengths)
+    wavelength_lst = np.linspace(1e-11, max_wavelength, num_wavelengths)
     temp_lst = stellar_disk_vector**(1/4) / sigma
 
     R = [] 
@@ -93,18 +92,22 @@ def get_R(star, num_wavelengths):
     
     return R
 
-s = Star(np.pi/2, 5000, 3e6, 4, 10000)
+if __name__ == '__main__':
+    s = Star(np.pi/2, 5000, 3e6, 4, 500)
 
-stellar_disk = s.get_stellar_disk()
+    stellar_disk = s.get_stellar_disk()
+    max_wavelength = 200e-8
+    R = get_R(s, 400, max_wavelength=max_wavelength)
 
-R = get_R(s, 400)
+    print(R.shape)
+    print(stellar_disk.shape)
 
-line_spectra = R.T @ stellar_disk
+    line_spectra = R.T @ stellar_disk
 
-wavelengths = np.linspace(0,5000e-9,400)
+    wavelengths = np.linspace(0,max_wavelength,400)
 
-plt.plot(wavelengths ,line_spectra)
-plt.show()
+    plt.plot(wavelengths ,line_spectra)
+    plt.show()
     
 
 
