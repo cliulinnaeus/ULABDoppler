@@ -198,6 +198,20 @@ class Star:
         plt.imshow(map, cmap='hot')
         plt.show()
 
+    # plots lst on sphere in 3d
+    # def plot_on_sphere3d(self, lst):
+        # bins = self._sort_into_bins(lst)
+        # fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+        #
+        # for idx, bin in enumerate(bins):
+        #
+        # # compute the x and y and z coordinate for each
+        # xx, yy = np.linspace(-self.radius, self.radius, 1000), np.linspace(-self.radius, self.radius, 1000)
+        # X, Y = np.meshgrid(xx, yy)
+        # ax.plot_surface(X, Y, )
+
+
+
 
 
 s = Star(np.pi/2, 5000, 3e6, 4, 10000)
