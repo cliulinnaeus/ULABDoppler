@@ -5,9 +5,18 @@ from scipy import constants
 from scipy.integrate import quad
 from Simulator import * 
 
-h = constants.Planck
-c = constants.c
-k = constants.k
+# setting these constants under SI unit will cause 32 bit float overflow
+# h = constants.Planck
+# c = constants.c
+# k = constants.k
+
+# T -> kilo Kelvin
+# lambda (wavelength) -> 10e-7 -> 10e-4 m -> in units of anstrom
+
+h = 1
+c = 1
+k = 1
+
 inf = np.inf
 
 def black_body(wavelength, temperature):
@@ -56,21 +65,27 @@ def doppler_shift(v_rot):
 
 print(black_body_matrix([1]))
 
-def get_R(star, num_wavelengths, max_wavelength = 200e-8):
+def get_R(star, num_wavelengths, max_wavelength = 15000):
     
     delta_wavelength = max_wavelength / num_wavelengths #meters
 
     star.get_stellar_disk()
-    stellar_disk_vector = star.stellar_disk_vector
+    # stellar_disk_vector = star.stellar_disk_vector
+    stellar_disk_vector = star.I
 
     num_latitudes = star.num_latitudes
     inclination_angle = star.inclination_angle
     zones = star.zones 
     
-    wavelength_lst = np.linspace(1e-11, max_wavelength, num_wavelengths)
-    temp_lst = stellar_disk_vector**(1/4) / sigma
+    wavelength_lst = np.linspace(0, max_wavelength, num_wavelengths)
+    temp_lst = np.power(stellar_disk_vector, 0.25) / sigma
+    # TODO: error caused because I[0] is negative
+    print(stellar_disk_vector[0])
+    # plt.imshow(temp_lst.reshape((1, len(temp_lst))))
+    # plt.show()
 
-    R = [] 
+
+    R = []
 
     for i in range(len(stellar_disk_vector)):
         row = []
@@ -87,27 +102,40 @@ def get_R(star, num_wavelengths, max_wavelength = 200e-8):
                 row.append(0.0)
                 
         R.append(row)
-    
     R = np.array(R)
-    
     return R
 
 if __name__ == '__main__':
-    s = Star(np.pi/2, 5000, 3e6, 4, 500)
+    s = Star(np.pi/2, 5, 3e6, 4, 500)
 
     stellar_disk = s.get_stellar_disk()
-    max_wavelength = 200e-8
+    max_wavelength = 3
     R = get_R(s, 400, max_wavelength=max_wavelength)
+    s.plot_on_sphere(s.I)
 
-    print(R.shape)
-    print(stellar_disk.shape)
+    f = plt.imshow(R)
+    plt.colorbar(f)
+    plt.show()
+
+    # print(R.shape)
+    # print(stellar_disk.shape)
 
     line_spectra = R.T @ stellar_disk
 
-    wavelengths = np.linspace(0,max_wavelength,400)
-
+    wavelengths = np.linspace(0, max_wavelength, 400)
+    #
     plt.plot(wavelengths ,line_spectra)
     plt.show()
+
+    # def stuff(wavelength):
+    #     return black_body(wavelength, temperature=5)
+    #
+    # w = np.linspace(0, 0.4, 1000)
+    # plt.plot(w, stuff(w))
+    # plt.show()
+
+
+
     
 
 

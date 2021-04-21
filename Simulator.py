@@ -5,7 +5,9 @@ from math import radians, degrees, sin, cos, asin, acos, sqrt
 import copy
 import matplotlib.pyplot as plt
 
-sigma = 5.67e-8 #stefan's constant W / (m^2 K^4)
+# sigma = 5.67e-8 #stefan's constant W / (m^2 K^4)
+sigma = 2 * np.pi**5 / 15   # h = c = k = 1
+
 
 class Star:
 
@@ -13,7 +15,7 @@ class Star:
         spots_lat = np.array([0, 0, 0, 0, 0, 0, np.pi/4, np.pi/2, np.pi, 3*np.pi/2, 7*np.pi/4])
         spots_long = np.array([0, np.pi/4, np.pi/2, np.pi, 3*np.pi/2, 7*np.pi/4, 0, 0, 0, 0, 0])
         spots_radius = np.array([1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6])
-        spots_temp = np.array([500, 1000, 1500, 2000, 2500, 3000, 500, 1000, 1500, 2000, 2500])
+        spots_temp = np.array([5.9, 5.5, 4.75, 4.8, 3.9, 5.1, 2.5, 6.1, 3, 3.3, 3.7])
 
 
 
@@ -171,10 +173,10 @@ class Star:
         num_zones = int(np.sum(self.zones))
         I = np.full(num_zones, self.temp)
         I = self.add_sunspots(I, spots_lat, spots_long, spots_radius, spots_temp)
-        # change units of I to flux  
-
-        I = sigma * I**4
-
+        # change units of I to flux
+        print(sigma * 5**4)
+        I = sigma * (I**4)
+        # print(I[0])
         return I
 
     def _sort_into_bins(self, I):
@@ -203,7 +205,7 @@ class Star:
         for idx, bin in enumerate(bins):
             start_col = (width - len(bin)) // 2
             map[idx][start_col : start_col + len(bin)] = bin
-        colormap = plt.imshow(np.log(map+1e-8), cmap='hot')
+        colormap = plt.imshow(map, cmap='hot')
         plt.colorbar(colormap)
         plt.show()
 
@@ -223,7 +225,7 @@ class Star:
 
 
 if __name__ == '__main__':
-    s = Star(np.pi/2, 5000, 3e6, 4, 10000)
+    s = Star(np.pi/2, 5, 3e6, 4, 10000)
     # s.make_image_vector(2000, np.array([0]), np.array([0]),1,np.array([2000]))
 
 
