@@ -5,6 +5,7 @@ from math import radians, degrees, sin, cos, asin, acos, sqrt
 import copy
 import matplotlib.pyplot as plt
 
+sigma = 5.67e-8 #stefan's constant W / (m^2 K^4)
 
 class Star:
 
@@ -167,6 +168,10 @@ class Star:
         num_zones = int(np.sum(self.zones))
         I = np.full(num_zones, self.temp)
         I = self.add_sunspots(I, spots_lat, spots_long, spots_radius, spots_temp)
+        # change units of I to flux  
+
+        I = sigma * I**4
+
         return I
 
     def _sort_into_bins(self, I):
@@ -195,7 +200,8 @@ class Star:
         for idx, bin in enumerate(bins):
             start_col = (width - len(bin)) // 2
             map[idx][start_col : start_col + len(bin)] = bin
-        plt.imshow(map, cmap='hot')
+        colormap = plt.imshow(np.log(map+1e-8), cmap='hot')
+        plt.colorbar(colormap)
         plt.show()
 
     # plots lst on sphere in 3d
@@ -234,5 +240,5 @@ s.get_stellar_disk()
 # print(s.stellar_disk_vector == s.I)
 print(s.stellar_disk_vector[0])
 print(s.I[0])
-s.plot_on_sphere(s.stellar_disk_vector)
+s.plot_on_sphere(s.I)
 # s.plot_on_sphere(s.I - s.I)
