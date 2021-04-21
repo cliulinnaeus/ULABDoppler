@@ -70,8 +70,9 @@ def get_R(star, num_wavelengths, max_wavelength = 15000):
     delta_wavelength = max_wavelength / num_wavelengths #meters
 
     star.get_stellar_disk()
-    # stellar_disk_vector = star.stellar_disk_vector
-    stellar_disk_vector = star.I
+    stellar_disk_vector = star.stellar_disk_vector
+    #TODO: comment this line out and uncomment the above line
+    # stellar_disk_vector = star.I
 
     num_latitudes = star.num_latitudes
     inclination_angle = star.inclination_angle
@@ -80,7 +81,6 @@ def get_R(star, num_wavelengths, max_wavelength = 15000):
     wavelength_lst = np.linspace(0, max_wavelength, num_wavelengths)
     temp_lst = np.power(stellar_disk_vector, 0.25) / sigma
     # TODO: error caused because I[0] is negative
-    print(stellar_disk_vector[0])
     # plt.imshow(temp_lst.reshape((1, len(temp_lst))))
     # plt.show()
 
@@ -92,7 +92,6 @@ def get_R(star, num_wavelengths, max_wavelength = 15000):
         
         if stellar_disk_vector[i] != 0.0:
             for j in range(num_wavelengths):
-
                 a = integrate_black_body(wavelength_lst[j], delta_wavelength, temp_lst[i])
                 normalized_flux = a / stellar_disk_vector[i]
                 row.append(normalized_flux)
@@ -108,31 +107,34 @@ def get_R(star, num_wavelengths, max_wavelength = 15000):
 if __name__ == '__main__':
     s = Star(np.pi/2, 5, 3e6, 4, 500)
 
-    stellar_disk = s.get_stellar_disk()
-    max_wavelength = 3
-    R = get_R(s, 400, max_wavelength=max_wavelength)
-    s.plot_on_sphere(s.I)
+    phi_list = list(range(0, 10))
+    line_spectra_lst = []
+    for _ in phi_list:
+        s.rotate(np.pi * 2 / len(phi_list))
 
-    f = plt.imshow(R)
-    plt.colorbar(f)
-    plt.show()
+        stellar_disk = s.get_stellar_disk()
+        max_wavelength = 3
+        R = get_R(s, 400, max_wavelength=max_wavelength)
+        s.plot_on_sphere(s.stellar_disk_vector)
+        #
+        # f = plt.imshow(R)
+        # plt.colorbar(f)
+        # plt.show()
 
-    # print(R.shape)
-    # print(stellar_disk.shape)
+        # print(R.shape)
+        # print(stellar_disk.shape)
 
-    line_spectra = R.T @ stellar_disk
+        line_spectra = R.T @ stellar_disk
+        line_spectra_lst.append(line_spectra)
+
 
     wavelengths = np.linspace(0, max_wavelength, 400)
-    #
-    plt.plot(wavelengths ,line_spectra)
+    for l in line_spectra_lst:
+        plt.plot(wavelengths, l)
+    plt.legend(phi_list)
     plt.show()
 
-    # def stuff(wavelength):
-    #     return black_body(wavelength, temperature=5)
-    #
-    # w = np.linspace(0, 0.4, 1000)
-    # plt.plot(w, stuff(w))
-    # plt.show()
+
 
 
 

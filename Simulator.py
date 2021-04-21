@@ -15,8 +15,12 @@ class Star:
         spots_lat = np.array([0, 0, 0, 0, 0, 0, np.pi/4, np.pi/2, np.pi, 3*np.pi/2, 7*np.pi/4])
         spots_long = np.array([0, np.pi/4, np.pi/2, np.pi, 3*np.pi/2, 7*np.pi/4, 0, 0, 0, 0, 0])
         spots_radius = np.array([1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6])
-        spots_temp = np.array([5.9, 5.5, 4.75, 4.8, 3.9, 5.1, 2.5, 6.1, 3, 3.3, 3.7])
+        spots_temp = np.array([3, 5.5, 4.75, 4.8, 3.9, 5.1, 2.5, 6.1, 3, 3.3, 3.7])
 
+        spots_lat = spots_lat[0:1]
+        spots_long = spots_long[0:1]
+        spots_radius = spots_radius[0:1]
+        spots_temp = spots_temp[0:1]
 
 
         self.inclination_angle = inclination_angle
@@ -157,7 +161,7 @@ class Star:
             if s >= np.pi * 2:
                 self.spots_long[idx] = s - np.pi * 2
         self.I = self.make_image_vector(1, self.spots_lat, self.spots_long, self.spots_radius, self.spots_temp)
-
+        self.phase += delta_phase
 
 
 
@@ -206,8 +210,9 @@ class Star:
             start_col = (width - len(bin)) // 2
             map[idx][start_col : start_col + len(bin)] = bin
         colormap = plt.imshow(map, cmap='hot')
-        plt.colorbar(colormap)
-        plt.show()
+        # plt.colorbar(colormap)
+        plt.savefig(f'./{self.phase * 180 / np.pi}_deg.png')
+        plt.close()
 
     # plots lst on sphere in 3d
     # def plot_on_sphere3d(self, lst):
