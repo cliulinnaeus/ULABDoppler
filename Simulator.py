@@ -5,6 +5,8 @@ from math import radians, degrees, sin, cos, asin, acos, sqrt
 import copy
 import matplotlib.pyplot as plt
 
+from Forward import *
+
 # sigma = 5.67e-8 #stefan's constant W / (m^2 K^4)
 sigma = 2 * np.pi**5 / 15   # h = c = k = 1
 
@@ -27,6 +29,7 @@ class Star:
         self.temp = temp
         self.radius = radius
         self.v_e = v_e
+
         self.spots_lat = spots_lat
         self.spots_long = spots_long
         self.spots_radius = spots_radius
@@ -135,6 +138,27 @@ class Star:
         # and delta longitude
         return num_latitudes, zones, length_zone / self.radius
 
+    def get_lat_lon(self, I, index):
+        """
+        Input: image vector I, index of the element in the original I
+        Output: lat, lon of the element with given index
+        """
+        layered_I = self._sort_into_bins(I)
+        y = 1
+        while y <= len(self.zones) and index >= self.zones[y-1]:
+            index -= self.zones[y]
+            y += 1
+        x = index
+
+        num_latitudes = int(self.num_latitudes)
+        angles = np.zeros(num_latitudes)
+        total_polar_angle = np.pi - (np.pi/2 - self.inclination_angle)
+        delta_angle = total_polar_angle / num_latitudes
+        delta_phi_new = 2*np.pi / self.zones[y]
+        lat, lon = y * delta_angle, x * delta_phi_new
+        #TODO: debug lon, val not correct
+        return lat, lon
+
 
     def get_stellar_disk(self):
         polar_angle = np.pi/2 - self.inclination_angle
@@ -198,7 +222,7 @@ class Star:
             I.extend(bin)
         return np.array(I)
 
-    def plot_on_sphere(self, lst):
+    def plot_on_sphere(self, lst, savefig=False):
         I = lst
         num_latitudes = self.num_latitudes
         zones = self.zones
@@ -210,9 +234,12 @@ class Star:
             start_col = (width - len(bin)) // 2
             map[idx][start_col : start_col + len(bin)] = bin
         colormap = plt.imshow(map, cmap='hot')
-        # plt.colorbar(colormap)
-        plt.savefig(f'./{self.phase * 180 / np.pi}_deg.png')
-        plt.close()
+        plt.colorbar(colormap)
+        if savefig:
+            plt.savefig(f'./{self.phase * 180 / np.pi}_deg.png')
+            plt.close()
+        else:
+            plt.show()
 
     # plots lst on sphere in 3d
     # def plot_on_sphere3d(self, lst):
@@ -232,15 +259,16 @@ class Star:
 if __name__ == '__main__':
     s = Star(np.pi/2, 5, 3e6, 4, 10000)
     # s.make_image_vector(2000, np.array([0]), np.array([0]),1,np.array([2000]))
-
-
-
+    s_new = Star(89/180*np.pi, 5, 3e6, 4e6, 10000)
+    v_r = np.array([get_v_radial(s_new, i) for i in range(len(s_new.I))])
+    lon = np.array([s_new.get_lat_lon(s.I, i)[1] for i in range(len(s.I))])
+    s.plot_on_sphere(lon)
     '''for i in range(15):
         dtheta = 360 / 50
         s.plot_on_sphere()
         s.rotate(dtheta * np.pi / 180)'''
-
-
+    #D = doppler_shift(s_new)
+    #s.plot_on_sphere(D)
     # s.rotate(90* np.pi / 180)
     # s.plot_on_sphere()
 
@@ -250,5 +278,5 @@ if __name__ == '__main__':
     # print(s.stellar_disk_vector == s.I)
     print(s.stellar_disk_vector[0])
     print(s.I[0])
-    s.plot_on_sphere(s.I)
+    #s.plot_on_sphere(s.I)
     # s.plot_on_sphere(s.I - s.I)

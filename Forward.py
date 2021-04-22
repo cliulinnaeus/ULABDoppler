@@ -32,12 +32,12 @@ def integrate_black_body(init_wavelength, delta_wavelength, temperature):
     return quad(black_body, init_wavelength, init_wavelength+delta_wavelength, args=(temperature))[0]
 
 
-def get_temperature(I):
+def get_temperature(star):
     """
-    Input: Image vector I
+    Input: star
     Output: Temperature of each element(i) in I, T(i); type = 1D_array
     """
-    return I
+    return star.I
 
 
 def black_body_matrix(temp, frac=[1, 1]):
@@ -56,14 +56,41 @@ def black_body_matrix(temp, frac=[1, 1]):
     B_mat.reshape(len(temp), len(frac))
     return np.array(B_mat)
 
-def doppler_shift(v_rot):
+def get_v_radial(star, index):
     """
-    Input: rotational velocity of the star
-    Output: the doppler shift fraction of wavelength using equation $v_rot/c = lambda / lambda_0$
+    Input: star, index of the patch in image vector I, converting into: w = angular velocity, theta & phi = angles of each patch, R = radius, i = inclination angle
+    Output: radial speed
     """
-    return v_rot / c + 1
+    R = star.radius
+    w = star.v_e / R
+    lat, lon = star.get_lat_lon(star.I, index)
+    #print(lat, lon)
+    theta = np.pi/2 - lat
+    phi = lon
+    #print(theta, phi)
+    i = star.inclination_angle
 
-print(black_body_matrix([1]))
+    v_ang = np.array([0, 0, w])
+    position = np.array([R*np.sin(theta)*np.cos(phi), R*np.sin(theta)*np.sin(phi), R*np.cos(theta)])
+    inclination = np.array([0, np.sin(i), np.cos(i)])
+
+    v_radial = np.dot(np.cross(v_ang, position), inclination)
+    return v_radial
+
+def doppler_shift(star, l0):
+    """
+    Input: star, wavelength of the source (using Black Body radiation); converting into: rotational velocity of the star
+    Output: the doppler shift fraction of wavelength using equation $l/l0 = sqrt((1-B)/(1+B))$
+    """
+    v_r = np.array([get_v_radial(star, i) for i in range(len(star.I))])
+
+    #l0 = np.array([quad(black_body, 0, inf, args=(T))[0] for T in temperature])
+    B = v_r / c
+    l = np.sqrt((1-B)/(1+B))*l0
+    return l
+
+
+
 
 def get_R(star, num_wavelengths, max_wavelength = 15000):
     
@@ -80,7 +107,6 @@ def get_R(star, num_wavelengths, max_wavelength = 15000):
     
     wavelength_lst = np.linspace(0, max_wavelength, num_wavelengths)
     temp_lst = np.power(stellar_disk_vector, 0.25) / sigma
-    # TODO: error caused because I[0] is negative
     # plt.imshow(temp_lst.reshape((1, len(temp_lst))))
     # plt.show()
 
@@ -94,7 +120,7 @@ def get_R(star, num_wavelengths, max_wavelength = 15000):
             for j in range(num_wavelengths):
                 a = integrate_black_body(wavelength_lst[j], delta_wavelength, temp_lst[i])
                 normalized_flux = a / stellar_disk_vector[i]
-                row.append(normalized_flux)
+                row.append(doppler_shift(star, normalized_flux))
 
         else: 
             for j in range(num_wavelengths):
@@ -102,6 +128,7 @@ def get_R(star, num_wavelengths, max_wavelength = 15000):
                 
         R.append(row)
     R = np.array(R)
+    #R = np.array([doppler_shift(star, l0) for l0 in R])
     return R
 
 if __name__ == '__main__':
@@ -115,7 +142,7 @@ if __name__ == '__main__':
         stellar_disk = s.get_stellar_disk()
         max_wavelength = 3
         R = get_R(s, 400, max_wavelength=max_wavelength)
-        s.plot_on_sphere(s.stellar_disk_vector)
+        #s.plot_on_sphere(s.stellar_disk_vector)
         #
         # f = plt.imshow(R)
         # plt.colorbar(f)
@@ -126,15 +153,20 @@ if __name__ == '__main__':
 
         line_spectra = R.T @ stellar_disk
         line_spectra_lst.append(line_spectra)
+    s_new = Star(np.pi/2, 5, 3e6, 4e6, 500)
+    R = get_R(s_new, 400)
+    f = plt.imshow(R)
+    plt.colorbar(f)
+    plt.show()
 
-
+'''
     wavelengths = np.linspace(0, max_wavelength, 400)
     for l in line_spectra_lst:
         plt.plot(wavelengths, l)
     plt.legend(phi_list)
     plt.show()
 
-
+'''
 
 
 
