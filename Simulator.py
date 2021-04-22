@@ -241,7 +241,7 @@ class Star:
             plt.savefig(f'./{self.phase * 180 / np.pi}_deg.png')
             plt.close()
         else:
-            plt.pause(0.1)
+            plt.pause(0.01)
 
     # plots lst on sphere in 3d
     # def plot_on_sphere3d(self, lst):

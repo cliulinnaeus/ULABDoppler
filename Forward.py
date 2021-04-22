@@ -65,7 +65,7 @@ def get_v_radial(star, index):
     w = star.v_e / R
     lat, lon = star.get_lat_lon(star.I, index)
     #print(lat, lon)
-    theta = np.pi/2 - lat
+    theta = lat
     phi = lon
     #print(theta, phi)
     i = star.inclination_angle
@@ -75,19 +75,28 @@ def get_v_radial(star, index):
     inclination = np.array([0, np.sin(i), np.cos(i)])
 
     v_radial = np.dot(np.cross(v_ang, position), inclination)
-    return v_radial
+    return -v_radial
 
-def doppler_shift(star, l0):
+def doppler_shift(star):
     """
     Input: star, wavelength of the source (using Black Body radiation); converting into: rotational velocity of the star
-    Output: the doppler shift fraction of wavelength using equation $l/l0 = sqrt((1-B)/(1+B))$
+    Computed the doppler shift fraction of wavelength using equation $l/l0 = sqrt((1-B)/(1+B))$ and used it to calculate 
+    scaling factor using $np.sqrt(1 - (1 / v_e**2) * (l)**2 * (1 / np.sin(i)**2))$
+    Output: scaling factor of intensity profile due to doppler shift 
     """
     v_r = np.array([get_v_radial(star, i) for i in range(len(star.I))])
 
     #l0 = np.array([quad(black_body, 0, inf, args=(T))[0] for T in temperature])
-    B = v_r / c
-    l = np.sqrt((1-B)/(1+B))*l0
-    return l
+    B = v_r / 3e8
+    l = np.sqrt((1-B)/(1+B))
+
+    v_e = star.v_e / 3e8
+    i = star.inclination_angle
+
+    factor = np.sqrt(1 - (1 / v_e**2) * (l)**2 * (1 / np.sin(i)**2))
+    
+
+    return factor
 
 
 
@@ -110,6 +119,7 @@ def get_R(star, num_wavelengths, max_wavelength = 15000):
     # plt.imshow(temp_lst.reshape((1, len(temp_lst))))
     # plt.show()
 
+    doppler_shift_lst = doppler_shift(star)
 
     R = []
 
@@ -120,19 +130,24 @@ def get_R(star, num_wavelengths, max_wavelength = 15000):
             for j in range(num_wavelengths):
                 a = integrate_black_body(wavelength_lst[j], delta_wavelength, temp_lst[i])
                 normalized_flux = a / stellar_disk_vector[i]
-                row.append(doppler_shift(star, normalized_flux))
 
         else: 
             for j in range(num_wavelengths):
                 row.append(0.0)
+
+
                 
         R.append(row)
     R = np.array(R)
-    #R = np.array([doppler_shift(star, l0) for l0 in R])
+    print(doppler_shift_lst[0])
+    plt.plot(doppler_shift_lst)
+    plt.show()
+    #plt.close()
+    R = (doppler_shift_lst * R.T).T
     return R
 
 if __name__ == '__main__':
-    s = Star(np.pi/2, 5, 3e6, 4, 500)
+    s = Star(np.pi/2, 5, 3e6, 4e7, 500)
 
     phi_list = list(range(0, 10))
     line_spectra_lst = []
@@ -142,7 +157,8 @@ if __name__ == '__main__':
         stellar_disk = s.get_stellar_disk()
         max_wavelength = 3
         R = get_R(s, 400, max_wavelength=max_wavelength)
-        #s.plot_on_sphere(s.stellar_disk_vector)
+        s.plot_on_sphere(s.I, savefig = True)
+        
         #
         # f = plt.imshow(R)
         # plt.colorbar(f)
@@ -153,20 +169,15 @@ if __name__ == '__main__':
 
         line_spectra = R.T @ stellar_disk
         line_spectra_lst.append(line_spectra)
-    s_new = Star(np.pi/2, 5, 3e6, 4e6, 500)
-    R = get_R(s_new, 400)
-    f = plt.imshow(R)
-    plt.colorbar(f)
-    plt.show()
+    
 
-'''
     wavelengths = np.linspace(0, max_wavelength, 400)
     for l in line_spectra_lst:
         plt.plot(wavelengths, l)
     plt.legend(phi_list)
     plt.show()
 
-'''
+
 
 
 
