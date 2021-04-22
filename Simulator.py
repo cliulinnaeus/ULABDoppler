@@ -143,19 +143,20 @@ class Star:
         Input: image vector I, index of the element in the original I
         Output: lat, lon of the element with given index
         """
-        layered_I = self._sort_into_bins(I)
-        y = 1
-        while y <= len(self.zones) and index >= self.zones[y-1]:
-            index -= self.zones[y]
-            y += 1
-        x = index
+        y = 0
+        x = 0
+        for idx, num in enumerate(self.zones):
+            if index <= num:
+                y = idx
+                x = index - 1
 
+            index = index - num
         num_latitudes = int(self.num_latitudes)
         angles = np.zeros(num_latitudes)
         total_polar_angle = np.pi - (np.pi/2 - self.inclination_angle)
         delta_angle = total_polar_angle / num_latitudes
         delta_phi_new = 2*np.pi / self.zones[y]
-        lat, lon = y * delta_angle, x * delta_phi_new
+        lat, lon = (y + 1) * delta_angle, x * delta_phi_new
         #TODO: debug lon, val not correct
         return lat, lon
 
