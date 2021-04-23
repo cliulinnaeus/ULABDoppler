@@ -18,12 +18,12 @@ class Star:
         spots_long = np.array([0, np.pi/4, np.pi/2, np.pi, 3*np.pi/2, 7*np.pi/4, 0, 0, 0, 0, 0])
         spots_radius = np.array([1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6])
         spots_temp = np.array([3, 5.5, 4.75, 4.8, 3.9, 5.1, 2.5, 6.1, 3, 3.3, 3.7])
-
+        '''
         spots_lat = spots_lat[0:1]
         spots_long = spots_long[0:1]
         spots_radius = spots_radius[0:1]
         spots_temp = spots_temp[0:1]
-
+        '''
 
         self.inclination_angle = inclination_angle
         self.temp = temp
@@ -276,7 +276,7 @@ if __name__ == '__main__':
     # s.plot_on_sphere()
     # print(s.I)
 
-    for i in range (50):
+    for i in range (1):
         s_new = Star((90 - i/50 * 90)/180*np.pi, 5, 3e6, 4e6, 10000)
         v_r = np.array([get_v_radial(s_new, i) for i in range(len(s_new.I))])
         #lon = np.array([s_new.get_lat_lon(s_new.I, i)[1] for i in range(len(s.I))])

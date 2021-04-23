@@ -88,7 +88,7 @@ def doppler_shift(star):
 
     #l0 = np.array([quad(black_body, 0, inf, args=(T))[0] for T in temperature])
     B = v_r / 3e8
-    l = np.sqrt((1-B)/(1+B))
+    l = B
 
     v_e = star.v_e / 3e8
     i = star.inclination_angle
@@ -97,6 +97,27 @@ def doppler_shift(star):
     
 
     return factor
+
+def shift_spectrum(cur_spec, v_radial, wavelength_lst):
+    """
+    Input: current spectrum (list), \delta Lambda/Lambda (deci), wavelength (list)
+    Output: shifted array
+    """
+    #TODO: finish this :((((
+
+
+
+def get_projected_area(star, index):
+    """
+    Input: star, index of the patch in image vector I; converting into: theta & phi = angles of each patch, i = inclination angle
+    Output: factor for projected area using formula $sin(theta)*sin(phi)*sin(i)+cos(theta)*cos(i)$
+    """
+    lat, lon = star.get_lat_lon(star.I, index)
+    theta = lat
+    phi = lon
+    i = star.inclination_angle
+
+    return np.sin(theta)*np.sin(phi)*np.sin(i) + np.cos(theta)*np.cos(i)
 
 
 
@@ -114,7 +135,7 @@ def get_R(star, num_wavelengths, max_wavelength = 15000):
     inclination_angle = star.inclination_angle
     zones = star.zones 
     
-    wavelength_lst = np.linspace(0, max_wavelength, num_wavelengths)
+    wavelength_lst = np.linspace(0.1, max_wavelength, num_wavelengths)
     temp_lst = np.power(stellar_disk_vector, 0.25) / sigma
     # plt.imshow(temp_lst.reshape((1, len(temp_lst))))
     # plt.show()
@@ -130,24 +151,29 @@ def get_R(star, num_wavelengths, max_wavelength = 15000):
             for j in range(num_wavelengths):
                 a = integrate_black_body(wavelength_lst[j], delta_wavelength, temp_lst[i])
                 normalized_flux = a / stellar_disk_vector[i]
+                row.append(normalized_flux)
 
         else: 
             for j in range(num_wavelengths):
                 row.append(0.0)
 
 
+
                 
-        R.append(row)
+    R.append(row)
     R = np.array(R)
-    print(doppler_shift_lst[0])
-    plt.plot(doppler_shift_lst)
-    plt.show()
+    #print(doppler_shift_lst[0])
+    #plt.plot(doppler_shift_lst)
+    #plt.show()
     #plt.close()
+    
+    
     R = (doppler_shift_lst * R.T).T
     return R
 
 if __name__ == '__main__':
-    s = Star(np.pi/2, 5, 3e6, 4e7, 500)
+    #s = Star(np.pi/2, 5, 3e6, 4e7, 500)
+    s = Star(np.pi/4, 5, 3e6, 4, 1000)
 
     phi_list = list(range(0, 10))
     line_spectra_lst = []
@@ -171,11 +197,18 @@ if __name__ == '__main__':
         line_spectra_lst.append(line_spectra)
     
 
-    wavelengths = np.linspace(0, max_wavelength, 400)
-    for l in line_spectra_lst:
+    #ax, figure = plt.subplots()
+    wavelengths = np.linspace(0.1, max_wavelength, 400)
+    for index, l in enumerate(line_spectra_lst):
         plt.plot(wavelengths, l)
-    plt.legend(phi_list)
-    plt.show()
+        plt.savefig(f'./spectrum {index}_deg.png')
+        plt.close()
+        
+        
+    #plt.legend(phi_list)
+    
+    #plt.show()
+    
 
 
 
