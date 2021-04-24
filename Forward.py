@@ -119,7 +119,7 @@ def get_projected_area(star, index):
     phi = lon
     i = star.inclination_angle
 
-    return np.sin(theta)*np.sin(phi)*np.sin(i) + np.cos(theta)*np.cos(i)
+    return abs(np.sin(theta)*np.sin(phi)*np.sin(i) + np.cos(theta)*np.cos(i))
 
 
 
@@ -148,7 +148,8 @@ def get_R(star, num_wavelengths, max_wavelength = 15000):
 
     for i in range(len(stellar_disk_vector)):
         row = []
-        
+        projected_area = get_projected_area(star, i)
+
         if stellar_disk_vector[i] != 0.0:
             for j in range(num_wavelengths):
                 a = integrate_black_body(wavelength_lst[j], delta_wavelength, temp_lst[i])
@@ -160,7 +161,7 @@ def get_R(star, num_wavelengths, max_wavelength = 15000):
                 row.append(0.0)
 
         row = shift_spectrum(row, get_v_radial(star, i), wavelength_lst)
-        # row = row * get_projected_area(star, i)
+        row = row * get_projected_area(star, i)
         R.append(row)
 
     R = np.array(R)
@@ -172,42 +173,63 @@ def get_R(star, num_wavelengths, max_wavelength = 15000):
     return R
 
 if __name__ == '__main__':
-    s = Star(np.pi/2, 5, 3e6, 400000, 500)
-    #s = Star(np.pi/4, 5, 3e6, 4, 1000)
+    s = Star(np.pi/4, 5, 3e6, 1e6, 500)
+    # s = Star(np.pi/4, 5, 3e6, 4, 1000)
 
-    phi_list = list(range(0, 10))
-    line_spectra_lst = []
-    for _ in phi_list:
-        s.rotate(np.pi * 2 / len(phi_list))
+    # phi_list = list(range(0, 10))
+    # line_spectra_lst = []
+    # for _ in phi_list:
+    #     s.rotate(np.pi * 2 / len(phi_list))
 
-        stellar_disk = s.get_stellar_disk()
-        max_wavelength = 1
-        R = get_R(s, 400, max_wavelength=max_wavelength)
-        s.plot_on_sphere(s.I, savefig = True)
+    #     stellar_disk = s.get_stellar_disk()
+    #     max_wavelength = 1
+    #     R = get_R(s, 400, max_wavelength=max_wavelength)
+    #     s.plot_on_sphere(s.stellar_disk_vector, savefig = True)
         
-        #
-        # f = plt.imshow(R)
-        # plt.colorbar(f)
-        # plt.show()
+    #     #
+    #     # f = plt.imshow(R)
+    #     # plt.colorbar(f)
+    #     # plt.show()
 
-        # print(R.shape)
-        # print(stellar_disk.shape)
+    #     # print(R.shape)
+    #     # print(stellar_disk.shape)
 
-        line_spectra = R.T @ stellar_disk
-        line_spectra_lst.append(line_spectra)
+    #     line_spectra = R.T @ stellar_disk
+    #     line_spectra_lst.append(line_spectra)
     
 
-    #ax, figure = plt.subplots()
-    wavelengths = np.linspace(0.01, max_wavelength, 400)
-    for index, l in enumerate(line_spectra_lst):
-        plt.plot(wavelengths, l)
-        plt.savefig(f'./spectrum {index}_deg.png')
-        plt.close()
+    # #ax, figure = plt.subplots()
+    # wavelengths = np.linspace(0.01, max_wavelength, 400)
+    # for index, l in enumerate(line_spectra_lst):
+    #     print(np.argmax(l))
+    #     plt.plot(wavelengths, l)
+    #     plt.xscale('log')
+    #     plt.savefig(f'./spectrum {index}_deg.png')
+    #     plt.close()
         
         
-    #plt.legend(phi_list)
+    # plt.legend(phi_list)
     
-    #plt.show()
+    # plt.show()
+
+    wavelength_lst = np.linspace(0.01, 50, 5000)
+
+    flux_lst = black_body(wavelength_lst, 0.5)
+
+    shifted_flux = shift_spectrum(flux_lst, 600, wavelength_lst)
+
+    plt.plot(wavelength_lst, flux_lst)
+    plt.plot(wavelength_lst, shifted_flux)
+    #plt.plot(wavelength_lst, shifted_flux-flux_lst)
+    print(shifted_flux[0:7])
+    print(flux_lst[0:7])
+    plt.show()
+    plt.close()
+    #print(flux_lst)
+    #print(shifted_flux)
+
+    #lst = [get_v_radial(s, i) for i in range(len(s.I))]
+    #s.plot_on_sphere(lst)
     
 
 

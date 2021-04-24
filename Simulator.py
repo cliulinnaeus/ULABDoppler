@@ -18,12 +18,12 @@ class Star:
         spots_long = np.array([0, np.pi/4, np.pi/2, np.pi, 3*np.pi/2, 7*np.pi/4, 0, 0, 0, 0, 0])
         spots_radius = np.array([1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6])
         spots_temp = 10*np.array([3, 5.5, 4.75, 4.8, 3.9, 5.1, 2.5, 6.1, 3, 3.3, 3.7])
-        '''
+        
         spots_lat = spots_lat[0:1]
         spots_long = spots_long[0:1]
         spots_radius = spots_radius[0:1]
         spots_temp = spots_temp[0:1]
-        '''
+        
 
         self.inclination_angle = inclination_angle
         self.temp = temp
@@ -39,10 +39,8 @@ class Star:
         self.I = self.make_image_vector(num_of_patches, spots_lat, spots_long, spots_radius, spots_temp)
         self.phase = 0
 
-    #TODO: plot spots radius --> Done
-    #TODO: fix small number of patches problem
-    #TODO: write star map for different rotational phases
-    #TODO: forward problem solver (aka define the R matrix)
+        self.stellar_disk_vector = self.get_stellar_disk()
+
 
     def add_sunspots(self, I, spots_lat, spots_long, spots_radius, spots_temp):
         num_latitudes = int(self.num_latitudes)
@@ -173,8 +171,8 @@ class Star:
             if delta_l <= R*np.sin(theta):
                 phi = 2*np.arccos((np.tan(polar_angle))/np.tan(theta))
                 fraction_off = round(phi/(2*np.pi) * self.zones[idx])
-                bin[0:int(fraction_off//2 + 1)] = 0
-                bin[len(bin)-int(fraction_off//2):] = 0
+                #bin[0:int(fraction_off//2 + 1)] = 0
+                bin[len(bin)-int(fraction_off)-1:] = 0
         self.stellar_disk_vector = self._bins_to_I(bins)
         stellar_disk = self.stellar_disk_vector
 
@@ -236,12 +234,12 @@ class Star:
             start_col = (width - len(bin)) // 2
             map[idx][start_col : start_col + len(bin)] = bin
         colormap = plt.imshow(map, cmap='hot')
-        #plt.colorbar(colormap)
+        plt.colorbar(colormap)
         if savefig:
             plt.savefig(f'./{self.phase * 180 / np.pi}_deg.png')
             plt.close()
         else:
-            plt.pause(0.01)
+            plt.show()
 
     # plots lst on sphere in 3d
     # def plot_on_sphere3d(self, lst):
@@ -259,37 +257,39 @@ class Star:
 
 
 if __name__ == '__main__':
-    s = Star(np.pi/4, 5, 3e6, 4, 10000)
-    # s.make_image_vector(2000, np.array([0]), np.array([0]),1,np.array([2000]))
-    s_new = Star(np.pi/2, 5, 3e6, 4e6, 10000)
-    v_r = np.array([get_v_radial(s_new, i) for i in range(len(s_new.I))])
-    lon = np.array([s_new.get_lat_lon(s_new.I, i)[1] for i in range(len(s_new.I))])
-    #s.plot_on_sphere(lon)
-    #s.plot_on_sphere(s.I)
-    '''for i in range(15):
-        dtheta = 360 / 50
-        s.plot_on_sphere()
-        s.rotate(dtheta * np.pi / 180)'''
-    #D = doppler_shift(s_new)
-    #s.plot_on_sphere(D)
-    # s.rotate(90* np.pi / 180)
-    # s.plot_on_sphere()
-    # print(s.I)
+    s = Star(np.pi/2, 5, 3e6, 4, 10000)
+    # # s.make_image_vector(2000, np.array([0]), np.array([0]),1,np.array([2000]))
+    # s_new = Star(np.pi/2, 5, 3e6, 4e6, 10000)
+    # v_r = np.array([get_v_radial(s_new, i) for i in range(len(s_new.I))])
+    # lon = np.array([s_new.get_lat_lon(s_new.I, i)[1] for i in range(len(s_new.I))])
+    # #s.plot_on_sphere(lon)
+    # #s.plot_on_sphere(s.I)
+    # '''for i in range(15):
+    #     dtheta = 360 / 50
+    #     s.plot_on_sphere()
+    #     s.rotate(dtheta * np.pi / 180)'''
+    # #D = doppler_shift(s_new)
+    # #s.plot_on_sphere(D)
+    # # s.rotate(90* np.pi / 180)
+    # # s.plot_on_sphere()
+    # # print(s.I)
 
-    for i in range (1):
-        s_new = Star((90 - i/50 * 90)/180*np.pi, 5, 3e6, 4e6, 10000)
-        v_r = np.array([get_v_radial(s_new, i) for i in range(len(s_new.I))])
-        #lon = np.array([s_new.get_lat_lon(s_new.I, i)[1] for i in range(len(s.I))])
-        s_new.plot_on_sphere(v_r)
-
-
+    # for i in range (1):
+    #     s_new = Star((90 - i/50 * 90)/180*np.pi, 5, 3e6, 4e6, 10000)
+    #     v_r = np.array([get_v_radial(s_new, i) for i in range(len(s_new.I))])
+    #     #lon = np.array([s_new.get_lat_lon(s_new.I, i)[1] for i in range(len(s.I))])
+    #     s_new.plot_on_sphere(v_r)
 
 
 
 
-    s.get_stellar_disk() 
-    # print(s.stellar_disk_vector == s.I)
-    print(s.stellar_disk_vector[0])
-    print(s.I[0])
-    #s.plot_on_sphere(s.I)
-    # s.plot_on_sphere(s.I - s.I)
+
+
+    # s.get_stellar_disk() 
+    # # print(s.stellar_disk_vector == s.I)
+    # print(s.stellar_disk_vector[0])
+    # print(s.I[0])
+    # #s.plot_on_sphere(s.I)
+    # # s.plot_on_sphere(s.I - s.I)
+
+    s.plot_on_sphere(s.stellar_disk_vector)
