@@ -4,6 +4,7 @@ import math
 from scipy import constants
 from scipy.integrate import quad
 from Simulator import * 
+from PyAstronomy import pyasl
 
 # setting these constants under SI unit will cause 32 bit float overflow
 # h = constants.Planck
@@ -75,7 +76,8 @@ def get_v_radial(star, index):
     inclination = np.array([0, np.sin(i), np.cos(i)])
 
     v_radial = np.dot(np.cross(v_ang, position), inclination)
-    return -v_radial
+    # v_radial changed into km/s
+    return -v_radial/1000
 
 def doppler_shift(star):
     """
@@ -103,7 +105,7 @@ def shift_spectrum(cur_spec, v_radial, wavelength_lst):
     Input: current spectrum (list), \delta Lambda/Lambda (deci), wavelength (list)
     Output: shifted array
     """
-    #TODO: finish this :((((
+    return pyasl.dopplerShift(wavelength_lst, cur_spec, v_radial, edgeHandling="firstlast")[0]
 
 
 
@@ -135,7 +137,7 @@ def get_R(star, num_wavelengths, max_wavelength = 15000):
     inclination_angle = star.inclination_angle
     zones = star.zones 
     
-    wavelength_lst = np.linspace(0.1, max_wavelength, num_wavelengths)
+    wavelength_lst = np.linspace(0.01, max_wavelength, num_wavelengths)
     temp_lst = np.power(stellar_disk_vector, 0.25) / sigma
     # plt.imshow(temp_lst.reshape((1, len(temp_lst))))
     # plt.show()
@@ -157,23 +159,21 @@ def get_R(star, num_wavelengths, max_wavelength = 15000):
             for j in range(num_wavelengths):
                 row.append(0.0)
 
+        row = shift_spectrum(row, get_v_radial(star, i), wavelength_lst)
+        # row = row * get_projected_area(star, i)
+        R.append(row)
 
-
-                
-    R.append(row)
     R = np.array(R)
     #print(doppler_shift_lst[0])
     #plt.plot(doppler_shift_lst)
     #plt.show()
     #plt.close()
-    
-    
-    R = (doppler_shift_lst * R.T).T
+
     return R
 
 if __name__ == '__main__':
-    #s = Star(np.pi/2, 5, 3e6, 4e7, 500)
-    s = Star(np.pi/4, 5, 3e6, 4, 1000)
+    s = Star(np.pi/2, 5, 3e6, 400000, 500)
+    #s = Star(np.pi/4, 5, 3e6, 4, 1000)
 
     phi_list = list(range(0, 10))
     line_spectra_lst = []
@@ -181,7 +181,7 @@ if __name__ == '__main__':
         s.rotate(np.pi * 2 / len(phi_list))
 
         stellar_disk = s.get_stellar_disk()
-        max_wavelength = 3
+        max_wavelength = 1
         R = get_R(s, 400, max_wavelength=max_wavelength)
         s.plot_on_sphere(s.I, savefig = True)
         
@@ -198,7 +198,7 @@ if __name__ == '__main__':
     
 
     #ax, figure = plt.subplots()
-    wavelengths = np.linspace(0.1, max_wavelength, 400)
+    wavelengths = np.linspace(0.01, max_wavelength, 400)
     for index, l in enumerate(line_spectra_lst):
         plt.plot(wavelengths, l)
         plt.savefig(f'./spectrum {index}_deg.png')
