@@ -2,7 +2,9 @@ from Simulator import *
 from Forward import *
 from load_model import *
 import numpy as np
+from scipy.optimize import minimize 
 from sklearn.metrics import mean_squared_error
+
 
 #TODO: 
 # add gaussian noise
@@ -29,7 +31,7 @@ def mse(I, computed_I):
 
     return mean_squared_error(I, computed_I, squared = True)
 
-def maximum_entropy(D, computed_I, l = 1):
+def maximum_entropy(computed_I, D, l = 10):
 
     chi2 = mse(D, R.T @ computed_I)  
 
@@ -39,39 +41,56 @@ def maximum_entropy(D, computed_I, l = 1):
 
     Q = S - l*chi2
     
-    return Q
+    return -Q
 
+
+
+
+
+    
+    
 
 
 if __name__ == '__main__':
 
-    s = Star(np.pi/4, 5, 3e6, 1e3, 1500)
-    s1 = Star(np.pi/4, 5, 3e6, 1e3, 1500)
+    s = Star(np.pi/4, 5, 3e6, 1e3, 50)
+    s1 = Star(np.pi/4, 5, 3e6, 1e3, 50)
     I_file_path = './I/I_vector.csv'
-    R_parent_directory = './R'
-    D_parent_directory = './D'
+    R_file_path = './R/R_matrix.csv'
+    D_file_path = './D/flux_vs_wavelength_data.csv'
 
-    R = load_R(R_parent_directory)
-    D, wavelengths = load_D(D_parent_directory)
+    R = load_R(R_file_path)
+    print(R.shape)
+    D, wavelengths = load_D(D_file_path)
     I = load_I(I_file_path)
-    for i in range(len(R)):
-        computed_stellar_disk = pseudo_inverse(R[i],D[i])
-        true_stellar_disk = s.stellar_disk_vector
-        
-        true_stellar_disk = s.get_stellar_disk()
-        s.plot_on_sphere(computed_stellar_disk, savefig = True, parent_directory='./stellar_disk_computed/')
-        s1.plot_on_sphere(true_stellar_disk, savefig = True, parent_directory = './stellar_disk_ground_truths/')
+    
+    computed_stellar_disk = pseudo_inverse(R,D)
+    
+    #true_stellar_disk = s.get_stellar_disk()
+    s.plot_on_sphere(computed_stellar_disk, savefig = True, parent_directory='./stellar_disk_computed/')
+    s1.plot_on_sphere(I, savefig = True, parent_directory = './stellar_disk_ground_truths/')
 
-        s.rotate(np.pi * 2 / len(R))
-        s1.rotate(np.pi * 2 / len(R))
-
+    print(computed_stellar_disk[len(computed_stellar_disk)-2])
     #print(rmse(true_stellar_disk, computed_stellar_disk))
 
+    s.plot_on_sphere(computed_stellar_disk-I)
 
+    '''optimize'''
+    
+    I0 = np.full(I.shape, 5, dtype = float)
+    
+    result = minimize(maximum_entropy, x0 = I0, args = (D,))
 
+    optimized_I = result.x
 
+    s.plot_on_sphere(optimized_I)
+
+    print(result.success)
 
 
    #truth_i45_t5_r3e6_v1e_z1465_wl400_nrot10.png
 
     
+#TRY WITH INCLINATION pi/2, different inclination
+#OMIT DOPPLER IMAGING
+#MAKE D AND R HAVE DIFFERENT BUT CLOSE TEST STARS

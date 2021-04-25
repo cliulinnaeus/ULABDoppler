@@ -112,16 +112,23 @@ def shift_spectrum(cur_spec, v_radial, wavelength_lst):
 
 def get_projected_area(star, index):
     """
+    Will compute projected area at different phases and will set zone equal to 0 if it is behind the disk 
     Input: star, index of the patch in image vector I; converting into: theta & phi = angles of each patch, i = inclination angle
     Output: factor for projected area using formula $sin(theta)*sin(phi)*sin(i)+cos(theta)*cos(i)$
     """
+
     lat, lon = star.get_lat_lon(star.I, index)
     theta = lat
-    phi = lon
+    phi = lon + star.phase
     i = star.inclination_angle
-
-    return abs(np.sin(theta)*np.sin(phi)*np.sin(i) + np.cos(theta)*np.cos(i))
-
+    
+    dot_product = np.sin(theta)*np.sin(phi)*np.sin(i) + np.cos(theta)*np.cos(i)
+    
+    if dot_product >= -1:
+        
+        return abs(dot_product)
+    else:
+        return 0.0
 
 
 
@@ -129,10 +136,10 @@ def get_R(star, num_wavelengths, max_wavelength = 15000):
     
     delta_wavelength = max_wavelength / num_wavelengths #meters
 
-    star.get_stellar_disk()
-    stellar_disk_vector = star.stellar_disk_vector
-    #TODO: comment this line out and uncomment the above line
-    # stellar_disk_vector = star.I
+    
+    #stellar_disk_vector = star.stellar_disk_vector
+    
+    stellar_disk_vector = star.I
 
     num_latitudes = star.num_latitudes
     inclination_angle = star.inclination_angle
@@ -178,90 +185,67 @@ def get_R(star, num_wavelengths, max_wavelength = 15000):
 
 
 if __name__ == '__main__':
-    s = Star(np.pi/4, 5, 3e6, 1e3, 1500)
+    s = Star(np.pi/4, 5, 3e6, 1e3, 50)
     #s = Star(np.pi/4, 5, 3e6, 4, 1000)
+    
 
     dictionary = {'brightness': s.I}
     df = pd.DataFrame(dictionary)
     df.to_csv(f'./I/I_vector.csv')
 
     phi_list = list(range(0, 10))
-    line_spectra_lst = []
+    R_lst = []
+    
     for i in phi_list:
-        s.rotate(np.pi * 2 / len(phi_list))
+        I = s.rotate(np.pi * 2 / len(phi_list))
 
-        stellar_disk = s.get_stellar_disk()
-        max_wavelength = 3
+        stellar_disk = s.get_stellar_disk(I)
+        max_wavelength = 5
         R = get_R(s, 400, max_wavelength=max_wavelength)
         s.plot_on_sphere(s.stellar_disk_vector, savefig = True)
 
-        '''saving stellar disk vector to csv'''
-        index_lst = np.linspace(0, len(stellar_disk), len(stellar_disk))
-        dictionary = {'index': index_lst,'brightness': stellar_disk}
-        df = pd.DataFrame(dictionary)
-        df.to_csv(f'./stellar_disk_vector_{i}.csv')
+        # '''saving stellar disk vector to csv'''
+        # index_lst = np.linspace(0, len(stellar_disk), len(stellar_disk))
+        # dictionary = {'index': index_lst,'brightness': stellar_disk}
+        # df = pd.DataFrame(dictionary)
+        # df.to_csv(f'./stellar_disk_vector_{i}.csv')
 
-        '''saving R matrix to csv'''
-        np.savetxt(f'./R/R_matrix_{i}.csv', R, delimiter = ", ", fmt = '% s')
+        # '''saving R matrix to csv'''
+        # np.savetxt(f'./R/R_matrix_{i}.csv', R, delimiter = ", ", fmt = '% s')
+        R_lst.append(R)
         
-        
-        # f = plt.imshow(R)
-        # plt.colorbar(f)
-        # plt.show()
 
-        # print(R.shape)
-        # print(stellar_disk.shape)
+    R_all_phases = np.hstack(tuple(R_lst))
 
-        line_spectra = R.T @ stellar_disk
-        line_spectra_lst.append(line_spectra)
+    np.savetxt(f'./R/R_matrix.csv', R_all_phases, delimiter = ", ", fmt = '% s')
+
+    line_spectra = R_all_phases.T @ s.I
     
 
-    #ax, figure = plt.subplots()
     wavelengths = np.linspace(0.01, max_wavelength, 400)
+    phase_count = 10
+    
+    plt.xlabel('Wavelength')
+    plt.ylabel('Normalized Flux')
+    plt.grid()
+    plt.plot(list(wavelengths) * phase_count, line_spectra, marker = '.', color = 'red', linewidth = 5, alpha = 0.3)
+    plt.xscale('log')
+    plt.savefig(f'./spectrum_deg.png')
+    plt.close()
 
-  
 
-
-    for index, l in enumerate(line_spectra_lst):
-        print(np.argmax(l))
-        plt.xlabel('Wavelength')
-        plt.ylabel('Normalized Flux')
-        plt.grid()
-        plt.plot(wavelengths, l, marker = '.', color = 'red', linewidth = 5, alpha = 0.3)
-        plt.xscale('log')
-        plt.savefig(f'./spectrum {index}_deg.png')
-        plt.close()
-
-       
-        dictionary = {'wavelength': wavelengths, 'flux': l}
-        df = pd.DataFrame(dictionary)
-        
-        df.to_csv(f'./D/flux_vs_wavelength_data_{index}.csv')
-                
-        
+    dictionary = {'wavelength': list(wavelengths) * phase_count, 'flux': line_spectra}
+    df = pd.DataFrame(dictionary)
+    
+    df.to_csv(f'./D/flux_vs_wavelength_data.csv')
+            
+    
     # plt.legend(phi_list)
     
     # plt.show()
 
-    wavelength_lst = np.linspace(0.01, 50, 5000)
+   
 
-    flux_lst = black_body(wavelength_lst, 0.5)
-
-    shifted_flux = shift_spectrum(flux_lst, 600, wavelength_lst)
-
-    plt.plot(wavelength_lst, flux_lst)
-    plt.plot(wavelength_lst, shifted_flux)
-    #plt.plot(wavelength_lst, shifted_flux-flux_lst)
-    print(shifted_flux[0:7])
-    print(flux_lst[0:7])
-    plt.show()
-    plt.close()
-    #print(flux_lst)
-    #print(shifted_flux)
-
-    #lst = [get_v_radial(s, i) for i in range(len(s.I))]
-    #s.plot_on_sphere(lst)
-    
 
 
 

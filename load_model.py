@@ -4,22 +4,27 @@ import pandas as pd
 import glob, os
 
 
-def load_R(parent_directory):
+# def load_R(parent_directory):
 
-    array_lst = []
+#     array_lst = []
     
         
-    glob_list = list(glob.glob(parent_directory + "/*.csv"))
-    glob_list.sort()
+#     glob_list = list(glob.glob(parent_directory + "/*.csv"))
+#     glob_list.sort()
 
-    for file in glob_list:
-        array = np.loadtxt(file, delimiter = ',')
-        array_lst.append(array)
+#     for file in glob_list:
+#         array = np.loadtxt(file, delimiter = ',')
+#         array_lst.append(array)
     
 
-    #return np.hstack(tuple(array_lst))
-    return array_lst
-    
+#     return np.hstack(tuple(array_lst))
+#     #return array_lst
+
+def load_R(file_path):
+    array = np.loadtxt(file_path, delimiter = ",")
+
+    return array
+
 
 def load_I(file_path):
     
@@ -28,35 +33,22 @@ def load_I(file_path):
     return np.array(df['brightness']) 
 
 
-def load_D(parent_directory):
+def load_D(file_path):
     
-    array_lst = []
-    global wavelengths
+    df = pd.read_csv(file_path)
     
-    glob_list = list(glob.glob(parent_directory + "/*.csv"))
-    glob_list.sort()
-    
-    for file in glob_list:
-        df = pd.read_csv(file)
-        wavelengths = np.array(df['wavelength'])
-        flux = np.array(df['flux'])
-
-        array_lst.append(flux)
-      
-
-    #return np.concatenate(tuple(array_lst)), wavelengths
-    return array_lst, wavelengths
+    return np.array(df['flux']), np.array(df['wavelength'])
         
     
 
 if __name__ == '__main__': 
 
     I_file_path = './I/I_vector.csv'
-    R_parent_directory = './R'
-    D_parent_directory = './D'
+    R_file_path = './R/R_matrix.csv'
+    D_file_path = './D/flux_vs_wavelength_data.csv'
 
-    R = load_R(R_parent_directory)
-    D, wavelengths = load_D(D_parent_directory)
+    R = load_R(R_file_path)
+    D, wavelengths = load_D(D_file_path)
     I = load_I(I_file_path)
 
     plt.imshow(R)

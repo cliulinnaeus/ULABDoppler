@@ -40,7 +40,7 @@ class Star:
         self.I = self.make_image_vector(num_of_patches, spots_lat, spots_long, spots_radius, spots_temp)
         self.phase = 0
 
-        self.stellar_disk_vector = self.get_stellar_disk()
+        self.stellar_disk_vector = self.get_stellar_disk(self.I)
 
 
     def add_sunspots(self, I, spots_lat, spots_long, spots_radius, spots_temp):
@@ -161,9 +161,9 @@ class Star:
         return lat, lon
 
 
-    def get_stellar_disk(self):
+    def get_stellar_disk(self, lst):
         polar_angle = np.pi/2 - self.inclination_angle
-        bins = self._sort_into_bins(self.I)
+        bins = self._sort_into_bins(lst)
         R = self.radius
         for idx, bin in enumerate(bins):
             theta = self.dtheta * (idx + 1)
@@ -185,8 +185,11 @@ class Star:
         for idx, s in enumerate(self.spots_long):
             if s >= np.pi * 2:
                 self.spots_long[idx] = s - np.pi * 2
-        self.I = self.make_image_vector(1, self.spots_lat, self.spots_long, self.spots_radius, self.spots_temp)
+
         self.phase += delta_phase
+
+        return self.make_image_vector(1, self.spots_lat, self.spots_long, self.spots_radius, self.spots_temp)
+    
 
 
 
