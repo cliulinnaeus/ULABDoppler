@@ -4,6 +4,7 @@ import math
 from math import radians, degrees, sin, cos, asin, acos, sqrt
 import copy
 import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm
 
 from Forward import *
 
@@ -14,15 +15,15 @@ sigma = 2 * np.pi**5 / 15   # h = c = k = 1
 class Star:
 
     def __init__(self, inclination_angle, temp, radius, v_e, num_of_patches):
-        spots_lat = np.array([0, 0, 0, 0, 0, 0, np.pi/4, np.pi, 7*np.pi/4])
-        spots_long = np.array([0, np.pi/4, np.pi/2, np.pi, 3*np.pi/2, 7*np.pi/4, 0, 0, 0])
-        spots_radius = np.array([1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6])
-        spots_temp = 5*np.array([3, 5.5, 4.75, 4.8, 3.9, 5.1, 2.5, 3, 3.7])
+        spots_lat = np.array([0, np.pi/4, 0, 0, -np.pi/4, 0])
+        spots_long = np.array([0, np.pi/4, np.pi/2, np.pi, 3*np.pi/2, 7*np.pi/4])
+        spots_radius = np.array([1e6, 1e6, 1e6, 1e6, 1e6, 1e6])
+        spots_temp = np.array([3, 7, 3, 1, 3, 3])
         
-        spots_lat = spots_lat[0:1]
-        spots_long = spots_long[0:1]
-        spots_radius = spots_radius[0:1]
-        spots_temp = spots_temp[0:1]
+        # spots_lat = spots_lat[0:1]
+        # spots_long = spots_long[0:1]
+        # spots_radius = spots_radius[0:1]
+        # spots_temp = spots_temp[0:1]
         
 
         self.inclination_angle = inclination_angle
@@ -222,7 +223,7 @@ class Star:
             I.extend(bin)
         return np.array(I)
 
-    def plot_on_sphere(self, lst, savefig=False):
+    def plot_on_sphere(self, lst, savefig=False, parent_directory = './'):
         I = lst
         num_latitudes = self.num_latitudes
         zones = self.zones
@@ -233,12 +234,14 @@ class Star:
         for idx, bin in enumerate(bins):
             start_col = (width - len(bin)) // 2
             map[idx][start_col : start_col + len(bin)] = bin
-        colormap = plt.imshow(map, cmap='hot')
+        #colormap = plt.imshow(map, cmap='hot')
+    
+        colormap = plt.matshow(map, cmap = 'hot', norm = LogNorm(vmin=0.01, vmax=max(lst)*1000))
         plt.colorbar(colormap)
         plt.xlabel('pixels')
         plt.ylabel('pixels')
         if savefig:
-            plt.savefig(f'./{self.phase * 180 / np.pi}_deg.png')
+            plt.savefig(parent_directory + f'{self.phase * 180 / np.pi}_deg.png')
             plt.close()
         else:
             plt.show()
