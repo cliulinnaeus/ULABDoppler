@@ -14,10 +14,10 @@ sigma = 2 * np.pi**5 / 15   # h = c = k = 1
 class Star:
 
     def __init__(self, inclination_angle, temp, radius, v_e, num_of_patches):
-        spots_lat = np.array([0, 0, 0, 0, 0, 0, np.pi/4, np.pi/2, np.pi, 3*np.pi/2, 7*np.pi/4])
-        spots_long = np.array([0, np.pi/4, np.pi/2, np.pi, 3*np.pi/2, 7*np.pi/4, 0, 0, 0, 0, 0])
-        spots_radius = np.array([1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6])
-        spots_temp = 10*np.array([3, 5.5, 4.75, 4.8, 3.9, 5.1, 2.5, 6.1, 3, 3.3, 3.7])
+        spots_lat = np.array([0, 0, 0, 0, 0, 0, np.pi/4, np.pi, 7*np.pi/4])
+        spots_long = np.array([0, np.pi/4, np.pi/2, np.pi, 3*np.pi/2, 7*np.pi/4, 0, 0, 0])
+        spots_radius = np.array([1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6, 1e6])
+        spots_temp = 5*np.array([3, 5.5, 4.75, 4.8, 3.9, 5.1, 2.5, 3, 3.7])
         
         spots_lat = spots_lat[0:1]
         spots_long = spots_long[0:1]
@@ -228,13 +228,15 @@ class Star:
         zones = self.zones
         width = int(max(zones))
         height = int(num_latitudes)
-        map = np.zeros((height, width))
+        map = np.zeros((height, width)) - 1e7 
         bins = self._sort_into_bins(lst)
         for idx, bin in enumerate(bins):
             start_col = (width - len(bin)) // 2
             map[idx][start_col : start_col + len(bin)] = bin
         colormap = plt.imshow(map, cmap='hot')
         plt.colorbar(colormap)
+        plt.xlabel('pixels')
+        plt.ylabel('pixels')
         if savefig:
             plt.savefig(f'./{self.phase * 180 / np.pi}_deg.png')
             plt.close()
@@ -292,4 +294,6 @@ if __name__ == '__main__':
     # #s.plot_on_sphere(s.I)
     # # s.plot_on_sphere(s.I - s.I)
 
-    s.plot_on_sphere(s.stellar_disk_vector)
+    s.plot_on_sphere(s.I)
+
+    #s.plot_on_sphere(s.stellar_disk_vector)

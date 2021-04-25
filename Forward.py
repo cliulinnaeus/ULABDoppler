@@ -5,6 +5,7 @@ from scipy import constants
 from scipy.integrate import quad
 from Simulator import * 
 from PyAstronomy import pyasl
+import pandas as pd
 
 # setting these constants under SI unit will cause 32 bit float overflow
 # h = constants.Planck
@@ -172,41 +173,71 @@ def get_R(star, num_wavelengths, max_wavelength = 15000):
 
     return R
 
+    #def add_noise(snr):
+
+
+
 if __name__ == '__main__':
-    s = Star(np.pi/4, 5, 3e6, 1e6, 500)
-    # s = Star(np.pi/4, 5, 3e6, 4, 1000)
+    s = Star(np.pi/4, 5, 3e6, 1e3, 1500)
+    #s = Star(np.pi/4, 5, 3e6, 4, 1000)
 
-    # phi_list = list(range(0, 10))
-    # line_spectra_lst = []
-    # for _ in phi_list:
-    #     s.rotate(np.pi * 2 / len(phi_list))
+    dictionary = {'brightness': s.I}
+    df = pd.DataFrame(dictionary)
+    df.to_csv(f'./I/I_vector.csv')
 
-    #     stellar_disk = s.get_stellar_disk()
-    #     max_wavelength = 1
-    #     R = get_R(s, 400, max_wavelength=max_wavelength)
-    #     s.plot_on_sphere(s.stellar_disk_vector, savefig = True)
+    phi_list = list(range(0, 10))
+    line_spectra_lst = []
+    for i in phi_list:
+        s.rotate(np.pi * 2 / len(phi_list))
+
+        stellar_disk = s.get_stellar_disk()
+        max_wavelength = 3
+        R = get_R(s, 400, max_wavelength=max_wavelength)
+        s.plot_on_sphere(s.stellar_disk_vector, savefig = True)
+
+        '''saving stellar disk vector to csv'''
+        index_lst = np.linspace(0, len(stellar_disk), len(stellar_disk))
+        dictionary = {'index': index_lst,'brightness': stellar_disk}
+        df = pd.DataFrame(dictionary)
+        df.to_csv(f'./stellar_disk_vector_{i}.csv')
+
+        '''saving R matrix to csv'''
+        np.savetxt(f'./R/R_matrix_{i}.csv', R, delimiter = ", ", fmt = '% s')
         
-    #     #
-    #     # f = plt.imshow(R)
-    #     # plt.colorbar(f)
-    #     # plt.show()
+        
+        # f = plt.imshow(R)
+        # plt.colorbar(f)
+        # plt.show()
 
-    #     # print(R.shape)
-    #     # print(stellar_disk.shape)
+        # print(R.shape)
+        # print(stellar_disk.shape)
 
-    #     line_spectra = R.T @ stellar_disk
-    #     line_spectra_lst.append(line_spectra)
+        line_spectra = R.T @ stellar_disk
+        line_spectra_lst.append(line_spectra)
     
 
-    # #ax, figure = plt.subplots()
-    # wavelengths = np.linspace(0.01, max_wavelength, 400)
-    # for index, l in enumerate(line_spectra_lst):
-    #     print(np.argmax(l))
-    #     plt.plot(wavelengths, l)
-    #     plt.xscale('log')
-    #     plt.savefig(f'./spectrum {index}_deg.png')
-    #     plt.close()
+    #ax, figure = plt.subplots()
+    wavelengths = np.linspace(0.01, max_wavelength, 400)
+
+  
+
+
+    for index, l in enumerate(line_spectra_lst):
+        print(np.argmax(l))
+        plt.xlabel('Wavelength')
+        plt.ylabel('Normalized Flux')
+        plt.grid()
+        plt.plot(wavelengths, l, marker = '.', color = 'red', linewidth = 5, alpha = 0.3)
+        plt.xscale('log')
+        plt.savefig(f'./spectrum {index}_deg.png')
+        plt.close()
+
+       
+        dictionary = {'wavelength': wavelengths, 'flux': l}
+        df = pd.DataFrame(dictionary)
         
+        df.to_csv(f'./D/flux_vs_wavelength_data_{index}.csv')
+                
         
     # plt.legend(phi_list)
     
