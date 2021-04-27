@@ -14,16 +14,26 @@ sigma = 2 * np.pi**5 / 15   # h = c = k = 1
 
 class Star:
 
-    def __init__(self, inclination_angle, temp, radius, v_e, num_of_patches):
-        spots_lat = np.array([0, np.pi/4, 0, 0, -np.pi/4, 0])
+    def __init__(self, inclination_angle, temp, radius, v_e, num_of_patches, guess = False):
+        spots_lat = np.array([0, np.pi/4, 0, 0, 0, np.pi/4])
         spots_long = np.array([0, np.pi/4, np.pi/2, np.pi, 3*np.pi/2, 7*np.pi/4])
         spots_radius = np.array([1e6, 1e6, 1e6, 1e6, 1e6, 1e6])
-        spots_temp = np.array([3, 7, 3, 1, 3, 3])
+        spots_temp = np.array([1, 2, 2.5, 6, 2.5, 5])
         
         # spots_lat = spots_lat[0:1]
         # spots_long = spots_long[0:1]
         # spots_radius = spots_radius[0:1]
         # spots_temp = spots_temp[0:1]
+        if guess == True:
+            spots_lat = np.array([0, np.pi/4, 0, 0, 0, np.pi/4])
+            spots_long = np.array([0, np.pi/4, np.pi/2, np.pi, 3*np.pi/2, 7*np.pi/4])
+            spots_radius = np.array([1e6, 1e6, 1e6, 1e6, 1e6, 1e6])
+            spots_temp = np.array([8, 8, 8, 8, 8, 8])
+
+            # spots_lat = np.array([np.pi/4, np.pi/6, np.pi/8, 0, -np.pi/8, -np.pi/6])
+            # spots_long = np.array([0, np.pi/4, np.pi/2, np.pi, 3*np.pi/2, 7*np.pi/4])
+            # spots_radius = np.array([0.5e6, 0.5e6, 0.5e6, 0.5e6, 0.5e6, 0.5e6])
+            # spots_temp = np.array([1, 2, 3, 2, 3, 1])
         
 
         self.inclination_angle = inclination_angle
@@ -265,7 +275,7 @@ class Star:
 
 
 if __name__ == '__main__':
-    s = Star(np.pi/2, 5, 3e6, 4, 10000)
+    s = Star(np.pi/4, 4, 3e6, 4, 10000, guess = False)
     # # s.make_image_vector(2000, np.array([0]), np.array([0]),1,np.array([2000]))
     # s_new = Star(np.pi/2, 5, 3e6, 4e6, 10000)
     # v_r = np.array([get_v_radial(s_new, i) for i in range(len(s_new.I))])

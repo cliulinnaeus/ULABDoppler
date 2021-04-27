@@ -185,24 +185,35 @@ def get_R(star, num_wavelengths, max_wavelength = 15000):
 
 
 if __name__ == '__main__':
-    s = Star(np.pi/4, 5, 3e6, 1e3, 50)
+    s_R = Star(np.pi/4.2, 4.5, 3.4e6, 0.5e1, 500, guess = True)
+    s_D = Star(np.pi/4.2, 4.5, 3.4e6, 0.5e1, 500)
+
+    #s_R = Star(np.pi/4.2, 4.5, 3.4e6, 0.5e3, 100)
     #s = Star(np.pi/4, 5, 3e6, 4, 1000)
     
 
-    dictionary = {'brightness': s.I}
+    dictionary = {'brightness': s_D.I}
     df = pd.DataFrame(dictionary)
     df.to_csv(f'./I/I_vector.csv')
 
     phi_list = list(range(0, 10))
-    R_lst = []
+    R_guess_lst = []
+    R_truth_lst = []
     
     for i in phi_list:
-        I = s.rotate(np.pi * 2 / len(phi_list))
-
-        stellar_disk = s.get_stellar_disk(I)
+       
+        I_R = s_R.rotate(np.pi * 2 / len(phi_list))
+        stellar_disk_R = s_R.get_stellar_disk(I_R)
         max_wavelength = 5
-        R = get_R(s, 400, max_wavelength=max_wavelength)
-        s.plot_on_sphere(s.stellar_disk_vector, savefig = True)
+        R_guess = get_R(s_R, 400, max_wavelength=max_wavelength)
+
+        I_D = s_D.rotate(np.pi * 2 / len(phi_list))
+        stellar_disk_D = s_D.get_stellar_disk(I_D)
+        max_wavelength = 5
+        R_truth = get_R(s_D, 400, max_wavelength=max_wavelength)
+        s_D.plot_on_sphere(s_D.stellar_disk_vector, savefig = True)
+
+
 
         # '''saving stellar disk vector to csv'''
         # index_lst = np.linspace(0, len(stellar_disk), len(stellar_disk))
@@ -212,14 +223,16 @@ if __name__ == '__main__':
 
         # '''saving R matrix to csv'''
         # np.savetxt(f'./R/R_matrix_{i}.csv', R, delimiter = ", ", fmt = '% s')
-        R_lst.append(R)
+        R_guess_lst.append(R_guess)
+        R_truth_lst.append(R_truth)
         
 
-    R_all_phases = np.hstack(tuple(R_lst))
+    R_guess_all_phases = np.hstack(tuple(R_guess_lst))
+    R_truth_all_phases = np.hstack(tuple(R_truth_lst))
 
-    np.savetxt(f'./R/R_matrix.csv', R_all_phases, delimiter = ", ", fmt = '% s')
+    np.savetxt(f'./R/R_matrix.csv', R_guess_all_phases, delimiter = ", ", fmt = '% s')
 
-    line_spectra = R_all_phases.T @ s.I
+    line_spectra = R_truth_all_phases.T @ s_D.I
     
 
     wavelengths = np.linspace(0.01, max_wavelength, 400)

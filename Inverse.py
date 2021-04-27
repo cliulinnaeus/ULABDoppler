@@ -5,6 +5,10 @@ import numpy as np
 from scipy.optimize import minimize 
 from sklearn.metrics import mean_squared_error
 
+import autograd.numpy as np
+from autograd import grad
+from scipy.optimize import fsolve
+
 
 #TODO: 
 # add gaussian noise
@@ -18,8 +22,8 @@ def R_transpose(R, D):
 
 def pseudo_inverse(R, D):
 
-    print(np.linalg.pinv(R).shape)
-    print(D.shape)
+    #print(np.linalg.pinv(R).shape)
+    #print(D.shape)
 
     return np.linalg.pinv(R).T @ D
 
@@ -31,9 +35,26 @@ def mse(I, computed_I):
 
     return mean_squared_error(I, computed_I, squared = True)
 
-def maximum_entropy(computed_I, D, l = 10):
+def maximum_entropy(X0, D, l = 1000):
 
-    chi2 = mse(D, R.T @ computed_I)  
+    computed_I = X0
+
+    # phi_list = list(range(0, 10))
+    # R_guess_lst = []
+
+    # for i in phi_list:
+       
+    #     I = s_R.rotate(np.pi * 2 / len(phi_list))
+    #     stellar_disk_R = s_R.get_stellar_disk(I)
+    #     max_wavelength = 5
+    #     R_guess = get_R(s_R, 400, max_wavelength=max_wavelength)
+
+    #     R_guess_lst.append(R_guess)
+        
+
+    # R = np.hstack(tuple(R_guess_lst))
+
+    chi2 = mse(D, R.T @ computed_I)
 
     S = 0 
     p = computed_I/np.sum(computed_I)
@@ -44,17 +65,10 @@ def maximum_entropy(computed_I, D, l = 10):
     return -Q
 
 
-
-
-
-    
-    
-
-
 if __name__ == '__main__':
 
-    s = Star(np.pi/4, 5, 3e6, 1e3, 50)
-    s1 = Star(np.pi/4, 5, 3e6, 1e3, 50)
+    s_R = Star(np.pi/4.2, 4.5, 3.4e6, 0.5e1, 500, guess = True)
+    s_D = Star(np.pi/4.2, 4.5, 3.4e6, 0.5e1, 500)
     I_file_path = './I/I_vector.csv'
     R_file_path = './R/R_matrix.csv'
     D_file_path = './D/flux_vs_wavelength_data.csv'
@@ -67,30 +81,29 @@ if __name__ == '__main__':
     computed_stellar_disk = pseudo_inverse(R,D)
     
     #true_stellar_disk = s.get_stellar_disk()
-    s.plot_on_sphere(computed_stellar_disk, savefig = True, parent_directory='./stellar_disk_computed/')
-    s1.plot_on_sphere(I, savefig = True, parent_directory = './stellar_disk_ground_truths/')
+    s_R.plot_on_sphere(computed_stellar_disk, savefig = True, parent_directory='./stellar_disk_computed/')
+    s_D.plot_on_sphere(I, savefig = True, parent_directory = './stellar_disk_ground_truths/')
 
-    print(computed_stellar_disk[len(computed_stellar_disk)-2])
+    #print(computed_stellar_disk[len(computed_stellar_disk)-2])
     #print(rmse(true_stellar_disk, computed_stellar_disk))
 
-    s.plot_on_sphere(computed_stellar_disk-I)
+    s_D.plot_on_sphere(computed_stellar_disk)
 
     '''optimize'''
-    
-    I0 = np.full(I.shape, 5, dtype = float)
-    
-    result = minimize(maximum_entropy, x0 = I0, args = (D,))
-
+    s_mem_guess = Star(np.pi/4.2, 4.5, 3.4e6, 0.5e1, 500, guess = True)
+    I0 = s_mem_guess.I
+    result = minimize(maximum_entropy, x0 = I0, args = (D))
     optimized_I = result.x
+    s_D.plot_on_sphere(optimized_I)
+    
+    
+    
+    #print(s_mem_guess.I)
+    #print(optimized_I)
 
-    s.plot_on_sphere(optimized_I)
-
-    print(result.success)
 
 
-   #truth_i45_t5_r3e6_v1e_z1465_wl400_nrot10.png
 
     
-#TRY WITH INCLINATION pi/2, different inclination
-#OMIT DOPPLER IMAGING
+
 #MAKE D AND R HAVE DIFFERENT BUT CLOSE TEST STARS
