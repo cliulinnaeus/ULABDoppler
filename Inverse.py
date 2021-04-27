@@ -78,6 +78,9 @@ if __name__ == '__main__':
     D, wavelengths = load_D(D_file_path)
     I = load_I(I_file_path)
     
+    D = D + np.random.normal(0, 1, D.shape)
+    
+
     computed_stellar_disk = pseudo_inverse(R,D)
     
     #true_stellar_disk = s.get_stellar_disk()
